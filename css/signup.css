@@ -20,6 +20,8 @@ body {
   justify-content: space-between;
   gap: 20px;
   color: #f4f4f4;
+  position: sticky;
+  top: 0;
 }
 
 .navi img {
@@ -106,7 +108,7 @@ body {
 
 .join-book {
   display: grid;
-  grid-template-columns: 27px 1fr;
+  grid-template-columns: 40px 1fr;
   align-items: center;
   gap: 10px 9px;
   max-width: 310px;
@@ -169,6 +171,11 @@ body {
   box-shadow: 0 0 0 2px rgba(255, 201, 40, 0.15);
 }
 
+.inputbox img {
+  width: 10%;
+  height: 60%;
+}
+
 .inputbox i {
   width: 50px;
   height: 100%;
@@ -178,6 +185,7 @@ body {
   font-size: 20px;
   color: #17324f;
   border-right: 1px solid #17324f;
+  cursor: pointer;
 }
 
 .inputbox input {
@@ -286,7 +294,7 @@ body {
   width: 20px;
   height: 20px;
   margin-right: 5px;
-  color: var(--navy);
+  color: white;
   border-radius: 50%;
   text-decoration: none;
 }

@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign Up</title>
+    <title>login</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
     />
     <link rel="stylesheet" href="css/signup.css" />
+    <link rel="stylesheet" href="css/login.css" />
   </head>
   <body>
     <section class="navi">
@@ -28,11 +29,8 @@
     </section>
     <section class="hero-section">
       <div class="join">
-        <h1>Join <span>Starian Hotel</span></h1>
-        <p>
-          Create your account and get access to exclusive offers and easy
-          booking
-        </p>
+        <h1>Welcome Back!</h1>
+        <p>Login to your account and enjoy an easier booking experience.</p>
         <div class="join-book">
           <i class="fa-solid fa-bed"></i>
           <p>Book Rooms</p>
@@ -44,38 +42,17 @@
           <p>Manage Your Profile</p>
         </div>
       </div>
-
       <div class="signup-part">
         <h1>Create Account</h1>
         <h2>Fill in the details below to get started</h2>
 
-        <form id="signupform">
-          <div class="inputbox">
-            <i class="fa-solid fa-user"></i>
-            <input
-              type="text"
-              name="fullname"
-              placeholder="Full Name"
-              required
-            />
-          </div>
-
+        <form id="loginform">
           <div class="inputbox">
             <i class="fa-solid fa-envelope"></i>
             <input
-              type="emali"
+              type="email"
               name="email"
               placeholder="Email Address"
-              required
-            />
-          </div>
-
-          <div class="inputbox">
-            <i class="fa-solid fa-phone-volume"></i>
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Phone Number"
               required
             />
           </div>
@@ -90,29 +67,32 @@
               required
               minlength="8"
             />
-            <!-- <img
+            <i
               id="togglePassword"
-              src="img/lookright.png"
-              alt="Show password"
-            /> -->
+              class="fa-solid fa-eye-slash"
+              aria-label="Show password"
+            ></i>
+          </div>
+          <!--remember and forgot part-->
+          <div class="login-option">
+            <label class="remember"><input type="checkbox" />Remember Me</label>
+            <a href="#">Forgot Password?</a>
           </div>
 
-          <div class="inputbox">
-            <i class="fa-solid fa-lock"></i>
-            <input
-              type="password"
-              id="confirmpassword"
-              name="confirmpassword"
-              placeholder="Confirm Password"
-              required
-              minlength="8"
-            />
-          </div>
+          <button type="submit" class="login-btn">Login</button>
 
-          <button type="submit" class="signup-btn">Sign Up</button>
+          <p class="continue">Or Continue with</p>
+
+          <button class="google">
+            <i class="fa-brands fa-google"></i> Continue with Google
+          </button>
+
+          <button class="face">
+            <i class="fa-brands fa-facebook"></i> Continue with Facebook
+          </button>
 
           <div class="login-text">
-            <p>Already have an account? <a href="login.html">Login</a></p>
+            <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
           </div>
         </form>
       </div>
@@ -161,5 +141,6 @@
         </a>
       </div>
     </footer>
+    <script src="javascript/login.js"></script>
   </body>
 </html>
