@@ -8,8 +8,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="css/signup.css" />
-    <link rel="stylesheet" href="css/login.css" />
+    <link rel="stylesheet" href="css/signup.css?v=2" />
+    <link rel="stylesheet" href="css/login.css?v=2" />
   </head>
   <body>
     <section class="navi">
@@ -22,8 +22,8 @@
           <li><a href="menu.html">Menu</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
-          <li><a class="loginup" href="login.html">Login</a></li>
-          <li><a class="signup" href="signup.html">Sign Up</a></li>
+          <li><a class="loginup" href="login.php">Login</a></li>
+          <li><a class="signup" href="signup.php">Sign Up</a></li>
         </ul>
       </nav>
     </section>
@@ -43,14 +43,16 @@
         </div>
       </div>
       <div class="signup-part">
-        <h1>Create Account</h1>
-        <h2>Fill in the details below to get started</h2>
+        <h1>Login to your account</h1>
+        <h2>Enter your details to login</h2>
+        <div id="notification" role="status" aria-live="polite"></div>
 
-        <form id="loginform">
+        <form id="loginform" action="php/login_process.php" method="POST">
           <div class="inputbox">
             <i class="fa-solid fa-envelope"></i>
             <input
               type="email"
+              id="email"
               name="email"
               placeholder="Email Address"
               required
@@ -83,16 +85,16 @@
 
           <p class="continue">Or Continue with</p>
 
-          <button class="google">
+          <button type="button" class="google">
             <i class="fa-brands fa-google"></i> Continue with Google
           </button>
 
-          <button class="face">
+          <button type="button" class="face">
             <i class="fa-brands fa-facebook"></i> Continue with Facebook
           </button>
 
           <div class="login-text">
-            <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+            <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
           </div>
         </form>
       </div>
@@ -141,6 +143,6 @@
         </a>
       </div>
     </footer>
-    <script src="javascript/login.js"></script>
+    <script src="javascript/login.js?v=2"></script>
   </body>
 </html>

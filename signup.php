@@ -8,7 +8,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="css/signup.css" />
+    <link rel="stylesheet" href="css/signup.css?v=2" />
   </head>
   <body>
     <section class="navi">
@@ -21,8 +21,8 @@
           <li><a href="menu.html">Menu</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
-          <li><a class="loginup" href="login.html">Login</a></li>
-          <li><a class="signup" href="signup.html">Sign Up</a></li>
+          <li><a class="loginup" href="login.php">Login</a></li>
+          <li><a class="signup" href="signup.php">Sign Up</a></li>
         </ul>
       </nav>
     </section>
@@ -48,7 +48,7 @@
       <div class="signup-part">
         <h1>Create Account</h1>
         <h2>Fill in the details below to get started</h2>
-        <div id="notification"></div>
+        <div id="notification" role="status" aria-live="polite"></div>
 
         <form id="signupform" action="php/signup_process.php" method="POST">
           <div class="inputbox">
@@ -113,7 +113,7 @@
           <button type="submit" class="signup-btn">Sign Up</button>
 
           <div class="login-text">
-            <p>Already have an account? <a href="login.html">Login</a></p>
+            <p>Already have an account? <a href="login.php">Login</a></p>
           </div>
         </form>
       </div>

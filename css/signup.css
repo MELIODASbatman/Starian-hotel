@@ -298,3 +298,52 @@ body {
   border-radius: 50%;
   text-decoration: none;
 }
+
+#notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  z-index: 1000;
+  width: min(420px, calc(100% - 40px));
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: bold;
+  color: red;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -10px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
+}
+
+#notification.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+#notification.show.success {
+  display: block;
+  background-color: #d4edda;
+  color: #05ec3f;
+  font-weight: 700;
+  border: 1px solid #c3e6cb;
+}
+
+#notification.show.error {
+  background-color: #f8d7da;
+  color: #ff0000;
+  font-weight: 700;
+  border: 1px solid #f5c6cb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #notification {
+    transition: none;
+  }
+}
