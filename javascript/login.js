@@ -57,6 +57,12 @@ if (loginForm && notification) {
       }
 
       showNotification(data.message, data.success ? "success" : "error");
+
+      if (data.success) {
+        window.setTimeout(() => {
+          window.location.href = "index.php";
+        }, 1000);
+      }
     } catch (error) {
       showNotification("Something went wrong. Please try again.", "error");
       console.error("Login request failed:", error);

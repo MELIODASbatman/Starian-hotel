@@ -11,8 +11,8 @@ if ($_SERVER["REQUEST_METHOD"] !=="POST"){
   exit;
 }
 
-$email = trim($_POST["email"]) ?? "";
-$password = trim($_POST["password"] ?? "");
+$email = trim($_POST["email"] ?? "");
+$password = $_POST["password"] ?? "";
 
 if (empty($email) || empty($password)){
   echo json_encode([
@@ -46,19 +46,15 @@ if (!password_verify($password, $user["password"])){
   exit;
 }
 
+session_regenerate_id(true);
+$_SESSION["user_id"] = $user["id"];
+$_SESSION["fullname"] = $user["fullname"];
+$_SESSION["email"] = $user["email"];
+
 echo json_encode([
   "success" => true,
   "message" => "Login successful"
 ]);
-  session_regenerate_id(true);
-  $_SESSION["user_id"] = $user["id"]; 
-  $_SESSION["fullname"] = $user["fullname"];
-  $_SESSION["email"] = $user["email"];
 
-  echo json_encode([
-    "success" => true,
-    "message" => "Login successful"
-  ]);
-  
 $sql->close();
 $conn->close();

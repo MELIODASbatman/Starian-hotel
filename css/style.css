@@ -1,0 +1,417 @@
+/*  HERO SECTION */
+.hero {
+  min-height: 348px;
+  display: flex;
+  align-items: center;
+  padding: 45px 5.6%;
+
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(25, 13, 7, 0.82),
+      rgba(25, 13, 7, 0.42),
+      rgba(25, 13, 7, 0.04)
+    ),
+    url("../img/hotelbed.jpg");
+
+  background-size: cover;
+  background-position: center 55%;
+}
+
+.hero-content {
+  color: white;
+}
+
+.welcome {
+  font-size: 23px;
+  font-weight: bold;
+  letter-spacing: 5px;
+  margin-bottom: 0;
+}
+
+.hero h1 {
+  font-size: clamp(42px, 5.3vw, 82px);
+  font-weight: bold;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.hero h1 span {
+  color: #ffca28;
+}
+
+.tagline {
+  font-size: 19px;
+  line-height: 1.7;
+}
+
+.tagline span {
+  margin: 0 10px;
+}
+
+.book-btn {
+  display: inline-block;
+  margin-top: 21px;
+  padding: 15px 38px;
+  border-radius: 9px;
+  background-color: #ffca28;
+  color: #123452;
+  font-size: 16px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.book-btn:hover {
+  background-color: #f0b600;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   4. MENU SECTION
+========================= */
+
+.menu-section {
+  padding: 30px 5% 38px;
+  text-align: center;
+  background-color: #fafafa;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+}
+
+.section-heading h2 {
+  font-size: 43px;
+  color: #15324e;
+}
+
+.line {
+  width: 68px;
+  height: 2px;
+  background-color: #153b5e;
+}
+
+.line:first-child {
+  background-color: #2587ef;
+}
+
+.section-description {
+  color: #526780;
+  font-size: 19px;
+  margin-top: 5px;
+  margin-bottom: 28px;
+}
+
+/*  FOOD CARDS */
+
+.menu-container {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.food-card {
+  min-width: 0;
+  background-color: white;
+  border-radius: 9px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
+}
+
+.food-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.food-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 9px;
+}
+
+.food-info {
+  min-height: 154px;
+  padding: 17px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.food-info h3 {
+  color: #102e49;
+  font-size: 16px;
+  margin-bottom: 9px;
+}
+
+.food-info p {
+  color: #526780;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.price {
+  display: inline-block;
+  margin-top: auto;
+  padding: 10px 19px;
+  background-color: #ffca28;
+  color: #102e49;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* =========================
+   FEATURED ROOMS
+========================= */
+
+.featured-rooms {
+  padding: 38px 5% 45px;
+  text-align: center;
+  background: #ffffff;
+}
+
+.rooms-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+  margin-top: 28px;
+}
+
+.room-card {
+  overflow: hidden;
+  background: #fff;
+  border-radius: 10px;
+  text-align: left;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s;
+}
+
+.room-card:hover {
+  transform: translateY(-5px);
+}
+
+.room-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.room-info {
+  padding: 18px;
+}
+
+.room-info h3 {
+  color: #102e49;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.room-info > p {
+  color: #526780;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 17px;
+}
+
+.room-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.room-bottom p {
+  color: #102e49;
+  font-size: 16px;
+}
+
+.room-bottom p span {
+  color: #718096;
+  font-size: 12px;
+}
+
+.room-btn,
+.view-all-btn {
+  display: inline-block;
+  background: #ffca28;
+  color: #102e49;
+  font-weight: bold;
+  border-radius: 7px;
+  padding: 11px 17px;
+  transition: 0.3s;
+}
+
+.room-btn:hover,
+.view-all-btn:hover {
+  background: #efb400;
+}
+
+.view-all-btn {
+  margin-top: 28px;
+}
+
+/* =========================
+   CLICKABLE FOOD CARDS
+========================= */
+
+.food-card {
+  width: 100%;
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  color: inherit;
+  border: none;
+}
+
+.food-action {
+  display: inline-block;
+  color: #153b5e;
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 12px;
+  text-decoration: underline;
+}
+
+/* =========================
+   FOOD DETAILS POPUP
+========================= */
+
+.food-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(8, 25, 42, 0.75);
+}
+
+.food-modal.show {
+  display: flex;
+}
+
+.food-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 750px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: white;
+  border-radius: 14px;
+  overflow-x: hidden;
+}
+
+.food-modal-content > img {
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  object-fit: cover;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #102e49;
+  color: white;
+  font-size: 27px;
+  cursor: pointer;
+}
+
+.modal-food-info {
+  padding: 35px 25px;
+}
+
+.modal-food-info h2 {
+  font-size: 25px;
+  color: #102e49;
+  margin-bottom: 15px;
+}
+
+.modal-food-info > p {
+  color: #526780;
+  line-height: 1.7;
+}
+
+.modal-food-info .modal-price {
+  color: #a97900;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.modal-food-info label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.modal-food-info input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd4dc;
+  border-radius: 7px;
+  font: inherit;
+  margin-bottom: 18px;
+}
+
+.add-cart-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ffca28;
+  color: #102e49;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.add-cart-btn:hover {
+  background: #efb400;
+}
+
+.cart-message {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+/* CART INDICATOR */
+
+.cart-link {
+  color: white;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.cart-link i {
+  color: #ffca28;
+  margin-right: 5px;
+}
+
+.cart-link span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: #ffca28;
+  color: #102e49;
+  font-size: 12px;
+}

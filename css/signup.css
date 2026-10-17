@@ -71,6 +71,36 @@ body {
   border-radius: 5px;
   font-weight: bold;
 }
+
+/* Logged-in customer navigation */
+
+.account-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: white;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.nav-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffca28;
+}
+
+.nav-avatar-icon {
+  font-size: 27px;
+  color: white;
+}
+
+.account-link:hover {
+  color: #ffca28;
+}
+
 /* end of nav styling */
 
 /* hero styling */
