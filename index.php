@@ -16,32 +16,37 @@ $isLoggedIn = isset($_SESSION["user_id"]);
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/signup.css?v=2" />
-  <link rel="stylesheet" href="css/style.css?v=2" />
+  <link rel="stylesheet" href="css/signup.css?v=6" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 
 <body>
   <section class="navi">
-    <img src="img/starianlogo.png" alt="Holel's logo" />
+    <img src="img/starianlogo.png" alt="Starian Hotel logo" />
     <h1>Starian <span>Hotel</span></h1>
-    <nav class="nav-links">
+    <button
+      class="nav-toggle"
+      type="button"
+      aria-label="Open navigation menu"
+      aria-expanded="false"
+      aria-controls="main-navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="nav-links" id="main-navigation">
       <ul>
         <li><a href="index.php">Home</a></li>
-        <li><a href="room.html">Rooms</a></li>
+        <li><a href="rooms.html">Rooms</a></li>
         <li><a href="menu.html">Menu</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="contact.html">Contact</a></li>
 
         <?php if ($isLoggedIn): ?>
-          <li><a href="dashboard.php" class="account-link">
+          <li>
+            <a href="dashboard.php" class="account-link">
               <img src="img/user.png" alt="" class="nav-avatar">
-              <span>
-                <?php
-                echo htmlspecialchars(
-                  $_SESSION["fullname"] ?? "My Account"
-                );
-                ?>
-              </span>
+              <span><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span>
             </a>
           </li>
 
@@ -50,10 +55,11 @@ $isLoggedIn = isset($_SESSION["user_id"]);
           <li><a class="signup" href="signup.php">Sign Up</a></li>
         <?php endif; ?>
 
-        <a href="cart.html" class="cart-link">
-          <i class="fa-solid fa-cart-shopping"></i>
-          Cart <span id="cartCount">0</span>
-        </a>
+        <li>
+          <a href="cart.html" class="cart-link">
+            <i class="fa-solid fa-cart-shopping"></i>
+            Cart <span id="cartCount">0</span>
+          </a>
         </li>
       </ul>
     </nav>
@@ -249,6 +255,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
     </a>
   </section>
 
+  <!--footer-->
   <footer class="footer">
     <div class="footer-brand">
       <img src="img/starianlogo.png" alt="Starian Hotel logo" />
@@ -292,6 +299,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
       </a>
     </div>
   </footer>
+  <script src="javascript/navigation.js?v=1"></script>
 </body>
 
 </html>

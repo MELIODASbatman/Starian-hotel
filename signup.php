@@ -8,21 +8,31 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="css/signup.css?v=2" />
+    <link rel="stylesheet" href="css/signup.css?v=6" />
   </head>
   <body>
     <section class="navi">
-      <img src="img/starianlogo.png" alt="Holel's logo" />
+      <img src="img/starianlogo.png" alt="Starian Hotel logo" />
       <h1>Starian <span>Hotel</span></h1>
-      <nav class="nav-links">
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="main-navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="nav-links" id="main-navigation">
         <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="room.html">Rooms</a></li>
+          <li><a href="index.php">Home</a></li>
+          <li><a href="rooms.html">Rooms</a></li>
           <li><a href="menu.html">Menu</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><a class="loginup" href="login.php">Login</a></li>
-          <li><a class="signup" href="signup.php">Sign Up</a></li>
+          <li><a class="signup" href="signup.php" aria-current="page">Sign Up</a></li>
         </ul>
       </nav>
     </section>
@@ -162,6 +172,7 @@
         </a>
       </div>
     </footer>
+    <script src="javascript/navigation.js?v=1"></script>
     <script src="javascript/signup.js"></script>
   </body>
 </html>

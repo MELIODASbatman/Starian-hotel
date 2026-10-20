@@ -90,6 +90,19 @@
   color: blue;
 }
 
+@media (max-width: 420px) {
+  .login-option {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    font-size: 14px;
+  }
+
+  .login-btn {
+    min-height: 40px;
+    height: auto;
+  }
+}
+
 #notification {
   position: fixed;
   top: 20px;
