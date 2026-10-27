@@ -369,53 +369,6 @@
   margin-bottom: 18px;
 }
 
-.add-cart-btn {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 8px;
-  background: #ffca28;
-  color: #102e49;
-  font-weight: bold;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-.add-cart-btn:hover {
-  background: #efb400;
-}
-
-.cart-message {
-  margin-top: 12px;
-  font-size: 14px;
-}
-
-/* CART INDICATOR */
-
-.cart-link {
-  color: white;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.cart-link i {
-  color: #ffca28;
-  margin-right: 5px;
-}
-
-.cart-link span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 23px;
-  height: 23px;
-  padding: 0 5px;
-  border-radius: 50%;
-  background: #ffca28;
-  color: #102e49;
-  font-size: 12px;
-}
-
 @media (min-width: 901px) and (max-width: 1024px) {
   .menu-container {
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -37,10 +37,10 @@ $isLoggedIn = isset($_SESSION["user_id"]);
     <nav class="nav-links" id="main-navigation">
       <ul>
         <li><a href="index.php">Home</a></li>
-        <li><a href="rooms.html">Rooms</a></li>
-        <li><a href="menu.html">Menu</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="contact.html">Contact</a></li>
+        <li><a href="rooms.php">Rooms</a></li>
+        <li><a href="menu.php">Menu</a></li>
+        <li><a href="about.php">About</a></li>
+        <li><a href="contact.php">Contact</a></li>
 
         <?php if ($isLoggedIn): ?>
           <li>
@@ -55,12 +55,6 @@ $isLoggedIn = isset($_SESSION["user_id"]);
           <li><a class="signup" href="signup.php">Sign Up</a></li>
         <?php endif; ?>
 
-        <li>
-          <a href="cart.html" class="cart-link">
-            <i class="fa-solid fa-cart-shopping"></i>
-            Cart <span id="cartCount">0</span>
-          </a>
-        </li>
       </ul>
     </nav>
   </section>
@@ -77,7 +71,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
         Memorable stays
       </p>
 
-      <a href="rooms.html" class="book-btn"> Book Your Stay </a>
+      <a href="rooms.php" class="book-btn"> Book Your Stay </a>
     </div>
   </section>
 
@@ -102,8 +96,8 @@ $isLoggedIn = isset($_SESSION["user_id"]);
           <p>A cozy room with a comfortable bed and modern essentials.</p>
 
           <div class="room-bottom">
-            <p><strong>KSh 3,500</strong> <span>/ night</span></p>
-            <a href="rooms.html#standard" class="room-btn"> Explore </a>
+            <p><strong>KSh 2,500</strong> <span>/ night</span></p>
+            <a href="rooms.php#standard-rooms" class="room-btn"> Explore </a>
           </div>
         </div>
       </article>
@@ -116,8 +110,8 @@ $isLoggedIn = isset($_SESSION["user_id"]);
           <p>Enjoy extra space, elegant furnishings and a relaxing stay.</p>
 
           <div class="room-bottom">
-            <p><strong>KSh 5,500</strong> <span>/ night</span></p>
-            <a href="rooms.html#deluxe" class="room-btn"> Explore </a>
+            <p><strong>KSh 6,000</strong> <span>/ night</span></p>
+            <a href="rooms.php#deluxe-rooms" class="room-btn"> Explore </a>
           </div>
         </div>
       </article>
@@ -132,14 +126,14 @@ $isLoggedIn = isset($_SESSION["user_id"]);
           <p>Experience premium comfort with a spacious, stylish interior.</p>
 
           <div class="room-bottom">
-            <p><strong>KSh 8,500</strong> <span>/ night</span></p>
-            <a href="rooms.html#executive" class="room-btn"> Explore </a>
+            <p><strong>KSh 10,000</strong> <span>/ night</span></p>
+            <a href="rooms.php#executive-rooms" class="room-btn"> Explore </a>
           </div>
         </div>
       </article>
     </div>
 
-    <a href="rooms.html" class="view-all-btn">
+    <a href="rooms.php" class="view-all-btn">
       Explore All Rooms <i class="fa-solid fa-arrow-right"></i>
     </a>
   </section>
@@ -236,16 +230,6 @@ $isLoggedIn = isset($_SESSION["user_id"]);
 
           <p class="modal-price" id="modalFoodPrice">KSh 0</p>
 
-          <label for="foodQuantity">Quantity</label>
-
-          <input type="number" id="foodQuantity" value="1" min="1" max="20" />
-
-          <button type="button" class="add-cart-btn" id="addToCart">
-            <i class="fa-solid fa-cart-plus"></i>
-            Add to Cart
-          </button>
-
-          <p id="cartMessage" class="cart-message" aria-live="polite"></p>
         </div>
       </div>
     </div>

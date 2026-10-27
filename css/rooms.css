@@ -150,6 +150,15 @@
   transition: background 0.2s;
 }
 
+.booking-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.booking-actions .availability-btn {
+  flex: 1;
+}
+
 .availability-btn:hover {
   background: #edb300;
 }
@@ -163,6 +172,110 @@
   color: #244867;
   font-size: 12px;
   line-height: 1.7;
+}
+
+.booking-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: min(460px, calc(100% - 32px));
+  padding: 18px 44px 18px 18px;
+  border: 1px solid #c3e6cb;
+  border-radius: 12px;
+  background: #d4edda;
+  color: #155724;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translate(-50%, -10px);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.booking-notification[hidden] {
+  display: none;
+}
+
+.booking-notification.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.booking-notification.error {
+  border-color: #f5c6cb;
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.booking-notification-icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  color: #218838;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.booking-notification.error .booking-notification-icon {
+  color: #c82333;
+}
+
+.booking-notification-title {
+  display: block;
+  margin: 1px 0 5px;
+  color: #155724;
+  font-size: 15px;
+}
+
+.booking-notification.error .booking-notification-title {
+  color: #721c24;
+}
+
+.booking-notification-content p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.booking-notification-close {
+  position: absolute;
+  top: 10px;
+  right: 11px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.booking-notification-close:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 600px) {
+  .booking-notification {
+    top: 12px;
+    width: calc(100% - 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booking-notification {
+    transition: none;
+  }
 }
 
 /* ROOM CATALOGUE */
@@ -248,6 +361,14 @@
 .room-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 9px 22px rgba(16, 46, 73, 0.13);
+}
+
+.room-card.selected {
+  border-color: #dba900;
+  background: #fffdf5;
+  box-shadow:
+    0 0 0 3px rgba(255, 202, 40, 0.28),
+    0 8px 20px rgba(16, 46, 73, 0.12);
 }
 
 .room-photo {
@@ -416,4 +537,133 @@
 
 .view-room-btn i {
   font-size: 10px;
+}
+
+@media (max-width: 1100px) {
+  .room-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .booking-search {
+    width: 92%;
+  }
+}
+
+@media (max-width: 760px) {
+  .rooms-hero {
+    min-height: 150px;
+    padding: 22px 4%;
+  }
+
+  .booking-search {
+    width: 92%;
+    padding: 20px;
+  }
+
+  .booking-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+  }
+
+  .room-catalogue {
+    padding: 22px 4% 30px;
+  }
+
+  .room-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .room-photo {
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (max-width: 520px) {
+  .rooms-hero {
+    min-height: 135px;
+  }
+
+  .booking-search {
+    width: calc(100% - 24px);
+    margin: 16px auto;
+    padding: 16px;
+  }
+
+  .booking-heading {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 17px;
+  }
+
+  .booking-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 19px;
+  }
+
+  .booking-heading h2 {
+    font-size: 20px;
+  }
+
+  .booking-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .booking-actions {
+    flex-direction: column;
+  }
+
+  .booking-actions .availability-btn {
+    width: 100%;
+  }
+
+  .availability-message {
+    margin-top: 14px;
+  }
+
+  .room-catalogue {
+    padding: 18px 12px 24px;
+  }
+
+  .room-category {
+    margin-bottom: 26px;
+  }
+
+  .category-heading {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .category-title p {
+    font-size: 11px;
+  }
+
+  .category-count {
+    padding: 5px 8px;
+    white-space: nowrap;
+  }
+
+  .room-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .room-photo {
+    aspect-ratio: 16 / 9;
+  }
+
+  .room-info {
+    padding: 14px;
+  }
+
+  .room-description {
+    min-height: 0;
+  }
+
+  .view-room-btn {
+    min-height: 40px;
+  }
 }

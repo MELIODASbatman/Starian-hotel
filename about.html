@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Starian Hotel | About</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/signup.css?v=6" />
+    <link rel="stylesheet" href="css/about.css" />
+  </head>
+  <body>
+    <section class="navi">
+      <img src="img/starianlogo.png" alt="Starian Hotel logo" />
+      <h1>Starian <span>Hotel</span></h1>
+      <button
+        class="nav-toggle"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="main-navigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="nav-links" id="main-navigation">
+        <ul>
+          <li><a href="index.php">Home</a></li>
+          <li><a href="rooms.php">Rooms</a></li>
+          <li><a href="menu.php">Menu</a></li>
+          <li><a href="about.php">About</a></li>
+          <li><a href="contact.php">Contact</a></li>
+
+          <?php if ($isLoggedIn): ?>
+          <li>
+            <a href="dashboard.php" class="account-link">
+              <img src="img/user.png" alt="" class="nav-avatar" />
+              <span
+                ><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span
+              >
+            </a>
+          </li>
+
+          <?php else: ?>
+          <li><a class="loginup" href="login.php">Login</a></li>
+          <li><a class="signup" href="signup.php">Sign Up</a></li>
+          <?php endif; ?>
+        </ul>
+      </nav>
+    </section>
+
+    <!-- hero section part -->
+    <section class="hero">
+      <div class="hero-content">
+        <p class="welcome">WELCOME TO</p>
+
+        <h1>Starian <span>Hotel</span></h1>
+
+        <p class="tagline">
+          Great food <span>•</span> Comfortable rooms <span>•</span>
+          Memorable stays
+        </p>
+
+        <a href="rooms.php" class="book-btn"> Book Your Stay </a>
+      </div>
+    </section>
+  </body>
+</html>
