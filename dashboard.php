@@ -2,6 +2,8 @@
 
 session_start();
 
+require_once __DIR__ . "/php/avatar_helpers.php";
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
 $isLoggedIn = isset($_SESSION["user_id"]) && !empty($_SESSION["user_id"]);
 
 // Check whether the user is logged in
@@ -192,8 +194,8 @@ $orderStatusClasses = [
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/signup.css?v=2" />
-  <link rel="stylesheet" href="css/dashboard.css?v=2" />
+  <link rel="stylesheet" href="css/signup.css?v=9" />
+  <link rel="stylesheet" href="css/dashboard.css?v=3" />
 </head>
 
 <body>
@@ -221,7 +223,7 @@ $orderStatusClasses = [
         <?php if ($isLoggedIn): ?>
           <li>
             <a href="dashboard.php" class="account-link">
-              <img src="img/user.png" alt="" class="nav-avatar" />
+              <img src="img/avatars/<?php echo htmlspecialchars($avatarFilename, ENT_QUOTES, "UTF-8"); ?>" alt="" class="nav-avatar" />
               <span><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span>
             </a>
           </li>
@@ -241,7 +243,7 @@ $orderStatusClasses = [
     <aside class="sidebar">
       <div class="customer-profile">
         <div class="profile-avatar">
-          <i class="fa-solid fa-user"></i>
+          <img src="img/avatars/<?php echo htmlspecialchars($avatarFilename, ENT_QUOTES, "UTF-8"); ?>" alt="" />
         </div>
         <h3><?php echo htmlspecialchars($fullname); ?></h3>
         <p>customer</p>
@@ -456,7 +458,7 @@ $orderStatusClasses = [
 
       <p>
         <i class="fa-solid fa-envelope"></i>
-        &nbsp; starianhotel@gmail.com
+        &nbsp; brianmagana048@gmail.com
       </p>
     </div>
 

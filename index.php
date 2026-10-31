@@ -2,6 +2,8 @@
 
 session_start();
 
+require_once __DIR__ . "/php/avatar_helpers.php";
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
 $isLoggedIn = isset($_SESSION["user_id"]);
 
 ?>
@@ -16,7 +18,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/signup.css?v=6" />
+  <link rel="stylesheet" href="css/signup.css?v=9" />
   <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 
@@ -45,7 +47,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
         <?php if ($isLoggedIn): ?>
           <li>
             <a href="dashboard.php" class="account-link">
-              <img src="img/user.png" alt="" class="nav-avatar">
+              <img src="img/avatars/<?php echo htmlspecialchars($avatarFilename, ENT_QUOTES, "UTF-8"); ?>" alt="" class="nav-avatar">
               <span><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span>
             </a>
           </li>
@@ -151,90 +153,63 @@ $isLoggedIn = isset($_SESSION["user_id"]);
     </p>
 
     <div class="menu-container">
-      <button class="food-card" type="button" data-food="chicken">
+      <a class="food-card" href="menu.php?food=chicken" aria-label="Choose Grilled Chicken from the full menu">
         <img src="img/grilled chicken.jpg" alt="Grilled chicken with sides" />
 
         <div class="food-info">
           <h3>Grilled Chicken</h3>
           <p>Tender chicken served with fries and fresh salad.</p>
           <span class="price">KSh 450</span>
-          <span class="food-action">View Details</span>
+          <span class="food-action">Choose this dish</span>
         </div>
-      </button>
+      </a>
 
-      <button class="food-card" type="button" data-food="burger">
+      <a class="food-card" href="menu.php?food=burger" aria-label="Choose Beef Burger from the full menu">
         <img src="img/burger.jpg" alt="Beef burger" />
 
         <div class="food-info">
           <h3>Beef Burger</h3>
           <p>Juicy beef patty with vegetables and special sauce.</p>
           <span class="price">KSh 400</span>
-          <span class="food-action">View Details</span>
+          <span class="food-action">Choose this dish</span>
         </div>
-      </button>
+      </a>
 
-      <button class="food-card" type="button" data-food="pasta">
+      <a class="food-card" href="menu.php?food=pasta" aria-label="Choose Vegetable Pasta from the full menu">
         <img src="img/pasta.jpg" alt="Vegetable pasta" />
 
         <div class="food-info">
           <h3>Vegetable Pasta</h3>
           <p>Pasta prepared with fresh vegetables and herbs.</p>
           <span class="price">KSh 350</span>
-          <span class="food-action">View Details</span>
+          <span class="food-action">Choose this dish</span>
         </div>
-      </button>
+      </a>
 
-      <button class="food-card" type="button" data-food="fish">
+      <a class="food-card" href="menu.php?food=fish" aria-label="Choose Fish and Chips from the full menu">
         <img src="img/fish.jpg" alt="Fish meal with chips" />
 
         <div class="food-info">
           <h3>Fish and Chips</h3>
           <p>Crispy fish served with golden fries and lemon.</p>
           <span class="price">KSh 450</span>
-          <span class="food-action">View Details</span>
+          <span class="food-action">Choose this dish</span>
         </div>
-      </button>
+      </a>
 
-      <button class="food-card" type="button" data-food="salad">
+      <a class="food-card" href="menu.php?food=salad" aria-label="Choose Chicken Caesar Salad from the full menu">
         <img src="img/chicken Caesar salad.jpg" alt="Fresh chicken salad" />
 
         <div class="food-info">
           <h3>Chicken Caesar Salad</h3>
           <p>Fresh lettuce, chicken, croutons and dressing.</p>
           <span class="price">KSh 350</span>
-          <span class="food-action">View Details</span>
+          <span class="food-action">Choose this dish</span>
         </div>
-      </button>
+      </a>
     </div>
 
-    <!-- Food Details Popup -->
-    <div class="food-modal" id="foodModal" aria-hidden="true">
-      <div
-        class="food-modal-content"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modalFoodName">
-        <button
-          type="button"
-          class="close-modal"
-          id="closeModal"
-          aria-label="Close details">
-          &times;
-        </button>
-
-        <img src="" alt="" id="modalFoodImage" />
-
-        <div class="modal-food-info">
-          <h2 id="modalFoodName">Food Name</h2>
-          <p id="modalFoodDescription">Food description</p>
-
-          <p class="modal-price" id="modalFoodPrice">KSh 0</p>
-
-        </div>
-      </div>
-    </div>
-
-    <a href="menu.html" class="view-all-btn">
+    <a href="menu.php" class="view-all-btn">
       View Full Menu <i class="fa-solid fa-arrow-right"></i>
     </a>
   </section>
@@ -263,7 +238,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
 
       <p>
         <i class="fa-solid fa-envelope"></i>
-        &nbsp; starianhotel@gmail.com
+        &nbsp; brianmagana048@gmail.com
       </p>
     </div>
 

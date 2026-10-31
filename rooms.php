@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once __DIR__ . "/php/avatar_helpers.php";
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
 require_once "php/db.php";
 
 $isLoggedIn = isset($_SESSION["user_id"]);
@@ -15,8 +17,8 @@ $isLoggedIn = isset($_SESSION["user_id"]);
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/signup.css?" />
-  <link rel="stylesheet" href="css/rooms.css?" />
+  <link rel="stylesheet" href="css/signup.css?v=9" />
+  <link rel="stylesheet" href="css/rooms.css?v=5" />
 </head>
 
 <body>
@@ -44,7 +46,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
         <?php if ($isLoggedIn): ?>
           <li>
             <a href="dashboard.php" class="account-link">
-              <img src="img/user.png" alt="" class="nav-avatar" />
+              <img src="img/avatars/<?php echo htmlspecialchars($avatarFilename, ENT_QUOTES, "UTF-8"); ?>" alt="" class="nav-avatar" />
               <span><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span>
             </a>
           </li>
@@ -127,6 +129,19 @@ $isLoggedIn = isset($_SESSION["user_id"]);
             <option value="family-4">Spacious Family Room</option>
           </optgroup>
         </select>
+      </div>
+
+      <div class="booking-field booking-room-selection">
+        <span class="booking-field-label">Rooms in this booking</span>
+        <button class="add-room-btn" id="add-room-btn" type="button">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          Add selected room
+        </button>
+        <ul
+          class="selected-rooms"
+          id="selected-rooms"
+          aria-label="Rooms added to this booking"
+          hidden></ul>
       </div>
 
       <div class="booking-field">
@@ -1014,7 +1029,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
 
       <p>
         <i class="fa-solid fa-envelope"></i>
-        &nbsp; starianhotel@gmail.com
+        &nbsp; brianmagana048@gmail.com
       </p>
     </div>
 
@@ -1035,7 +1050,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
     </div>
   </footer>
   <script src="javascript/navigation.js"></script>
-  <script src="javascript/room.js?v=2"></script>
+  <script src="javascript/room.js?v=3"></script>
 </body>
 
 </html>

@@ -60,7 +60,7 @@ if (loginForm && notification) {
 
       if (data.success) {
         window.setTimeout(() => {
-          window.location.href = "index.php";
+          window.location.href = data.redirect;
         }, 1000);
       }
     } catch (error) {

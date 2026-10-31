@@ -111,6 +111,12 @@
   font-weight: bold;
 }
 
+.booking-field-label {
+  color: #173650;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 .booking-field input,
 .booking-field select {
   width: 100%;
@@ -163,6 +169,76 @@
   background: #edb300;
 }
 
+.booking-room-selection {
+  align-self: stretch;
+}
+
+.add-room-btn {
+  display: inline-flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 13px;
+  border: 1px solid #d6e1ea;
+  border-radius: 6px;
+  background: #fff;
+  color: #173e60;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.add-room-btn:hover {
+  border-color: #dba900;
+  background: #fff8e4;
+}
+
+.selected-rooms {
+  display: grid;
+  gap: 6px;
+  max-height: 105px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.selected-rooms[hidden] {
+  display: none;
+}
+
+.selected-rooms li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  background: #edf5fc;
+  color: #244867;
+  font-size: 11px;
+}
+
+.remove-selected-room {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #a63b32;
+  font: inherit;
+  cursor: pointer;
+}
+
+.remove-selected-room:hover {
+  background: #fff;
+}
+
 .availability-message {
   margin-top: 18px;
   padding: 13px 15px;
@@ -172,6 +248,55 @@
   color: #244867;
   font-size: 12px;
   line-height: 1.7;
+}
+
+.availability-message .pay-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 11px 20px;
+  border: 1px solid #e2a900;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #ffdb62, #ffbf00 68%, #f2ad00);
+  color: #102e49;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(151, 105, 0, 0.24);
+  cursor: pointer;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+
+.availability-message .pay-button::after {
+  content: "→";
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.availability-message .pay-button:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 6px 15px rgba(151, 105, 0, 0.32);
+  transform: translateY(-2px);
+}
+
+.availability-message .pay-button:hover::after {
+  transform: translateX(3px);
+}
+
+.availability-message .pay-button:active {
+  box-shadow: 0 2px 5px rgba(151, 105, 0, 0.24);
+  transform: translateY(0);
+}
+
+.availability-message .pay-button:focus-visible {
+  outline: 3px solid #24577f;
+  outline-offset: 3px;
 }
 
 .booking-notification {

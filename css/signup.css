@@ -90,26 +90,40 @@ body {
 
 /* Logged-in customer navigation */
 
-.account-link {
+.nav-links a.account-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 40px;
   color: white;
   font-weight: bold;
   white-space: nowrap;
+  line-height: 1;
+}
+
+.nav-links a.account-link span {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .nav-avatar {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #ffca28;
+  padding: 2px;
+  object-fit: contain;
+  border: 2px solid #bceeff;
+  background: #e2f8ff;
 }
 
 .navi img.nav-avatar {
-  flex: 0 0 30px;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
 }
 
 .nav-avatar-icon {
@@ -435,11 +449,11 @@ body {
     background: #edb400;
   }
 
-  .nav-links .account-link {
+  .nav-links a.account-link {
     justify-content: flex-start;
   }
 
-  .account-link span {
+  .nav-links a.account-link span {
     white-space: nowrap;
   }
 
@@ -548,11 +562,11 @@ body {
     background: #edb400;
   }
 
-  .nav-links .account-link {
+  .nav-links a.account-link {
     justify-content: flex-start;
   }
 
-  .account-link span {
+  .nav-links a.account-link span {
     white-space: nowrap;
   }
 

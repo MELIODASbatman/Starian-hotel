@@ -8,7 +8,7 @@
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/signup.css?v=6" />
+  <link rel="stylesheet" href="css/signup.css?v=9" />
   <link rel="stylesheet" href="css/login.css?v=3" />
 </head>
 
@@ -131,7 +131,7 @@
 
       <p>
         <i class="fa-solid fa-envelope"></i>
-        &nbsp; starianhotel@gmail.com
+        &nbsp; brianmagana048@gmail.com
       </p>
     </div>
 

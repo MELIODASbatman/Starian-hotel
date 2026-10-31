@@ -29,14 +29,36 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 }
 
 // STEP 3: Get the submitted form data
-$room_code = trim($_POST["room_option"] ?? "");
+$room_codes = $_POST["room_codes"] ?? [];
+if (!is_array($room_codes)) {
+  $room_codes = [];
+}
+if (count($room_codes) === 0 && isset($_POST["room_option"])) {
+  $room_codes[] = $_POST["room_option"];
+}
+foreach ($room_codes as $roomCode) {
+  if (!is_string($roomCode)) {
+    http_response_code(400);
+    echo json_encode([
+      "success" => false,
+      "message" => "The selected room list is invalid."
+    ]);
+    exit;
+  }
+}
+$room_codes = array_map(
+  static fn($roomCode) => trim($roomCode),
+  $room_codes
+);
+$room_codes = array_values(array_unique(array_filter($room_codes)));
 $check_in = $_POST["check_in"] ?? "";
 $check_out = $_POST["check_out"] ?? "";
 $arrival_time = $_POST["arrival_time"] ?? "";
 
 // STEP 4: Check that all required fields were submitted
 if (
-  empty($room_code) ||
+  count($room_codes) === 0 ||
+  count($room_codes) > 16 ||
   empty($check_in) ||
   empty($check_out) ||
   empty($arrival_time)
@@ -107,145 +129,184 @@ if (
   exit;
 }
 
-// STEP 7: Find the selected room and retrieve its price
-$sql = $conn->prepare(
-  "SELECT id, room_name, price_per_night, status
-     FROM rooms
-     WHERE room_code = ?"
-);
+// STEP 7: Load and lock the selected rooms before checking availability.
+try {
+  if (!$conn->begin_transaction()) {
+    throw new RuntimeException("Unable to start booking transaction.");
+  }
 
-$sql->bind_param("s", $room_code);
-$sql->execute();
+  $placeholders = implode(",", array_fill(0, count($room_codes), "?"));
+  $roomStatement = $conn->prepare(
+    "SELECT id, room_code, room_name, price_per_night, status
+       FROM rooms
+       WHERE room_code IN ($placeholders)
+       ORDER BY id
+       FOR UPDATE"
+  );
 
-$result = $sql->get_result();
+  if (!$roomStatement) {
+    throw new RuntimeException("Unable to prepare room lookup.");
+  }
 
-if ($result->num_rows === 0) {
+  $roomParameters = [str_repeat("s", count($room_codes))];
+  foreach ($room_codes as $index => $roomCode) {
+    $roomParameters[] = &$room_codes[$index];
+  }
+  call_user_func_array([$roomStatement, "bind_param"], $roomParameters);
 
-  echo json_encode([
-    "success" => false,
-    "message" => "The selected room does not exist."
-  ]);
+  if (!$roomStatement->execute()) {
+    throw new RuntimeException("Unable to load selected rooms.");
+  }
 
-  $sql->close();
-  $conn->close();
+  $roomResult = $roomStatement->get_result();
+  $roomsByCode = [];
+  while ($room = $roomResult->fetch_assoc()) {
+    $roomsByCode[$room["room_code"]] = $room;
+  }
+  $roomStatement->close();
 
-  exit;
-}
+  if (count($roomsByCode) !== count($room_codes)) {
+    throw new InvalidArgumentException("One or more selected rooms do not exist.");
+  }
 
-$room = $result->fetch_assoc();
+  $rooms = [];
+  foreach ($room_codes as $roomCode) {
+    $room = $roomsByCode[$roomCode];
+    if ($room["status"] !== "available") {
+      throw new InvalidArgumentException(
+        $room["room_name"] . " is currently unavailable."
+      );
+    }
 
-$sql->close();
+    $rooms[] = $room;
+  }
 
-// STEP 8: Check whether the room is available for maintenance
-if ($room["status"] !== "available") {
+  // STEP 8: Check every selected room for overlapping reservations.
+  $availabilityStatement = $conn->prepare(
+    "SELECT id
+       FROM bookings
+       WHERE room_id = ?
+         AND booking_status IN ('pending', 'confirmed')
+         AND check_in < ?
+         AND check_out > ?
+       LIMIT 1"
+  );
 
-  echo json_encode([
-    "success" => false,
-    "message" => "This room is currently unavailable."
-  ]);
+  if (!$availabilityStatement) {
+    throw new RuntimeException("Unable to prepare room availability check.");
+  }
 
-  $conn->close();
+  foreach ($rooms as $room) {
+    $roomId = (int) $room["id"];
+    $availabilityStatement->bind_param(
+      "iss",
+      $roomId,
+      $check_out,
+      $check_in
+    );
 
-  exit;
-}
+    if (!$availabilityStatement->execute()) {
+      throw new RuntimeException("Unable to check room availability.");
+    }
 
-// STEP 9: Check for overlapping reservations
-$sql = $conn->prepare(
-  "SELECT id
-     FROM bookings
-     WHERE room_id = ?
-       AND booking_status IN ('pending', 'confirmed')
-       AND check_in < ?
-       AND check_out > ?
-     LIMIT 1"
-);
+    if ($availabilityStatement->get_result()->num_rows > 0) {
+      throw new InvalidArgumentException(
+        $room["room_name"] .
+          " is already booked for those dates. Choose another room or dates."
+      );
+    }
+  }
+  $availabilityStatement->close();
 
-$sql->bind_param(
-  "iss",
-  $room["id"],
-  $check_out,
-  $check_in
-);
+  // STEP 9: Calculate the stay and insert one booking row per room.
+  $total_nights = $checkInDate->diff($checkOutDate)->days;
+  $user_id = (int) $_SESSION["user_id"];
+  $insertStatement = $conn->prepare(
+    "INSERT INTO bookings
+      (
+          user_id,
+          room_id,
+          check_in,
+          check_out,
+          arrival_time,
+          total_nights,
+          total_price,
+          booking_status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')"
+  );
 
-$sql->execute();
+  if (!$insertStatement) {
+    throw new RuntimeException("Unable to prepare booking insert.");
+  }
 
-$result = $sql->get_result();
+  $booking_ids = [];
+  $total_price_cents = 0;
+  foreach ($rooms as $room) {
+    $room_id = (int) $room["id"];
+    $price_per_night_cents = (int) round(
+      (float) $room["price_per_night"] * 100
+    );
+    $room_total_cents = $total_nights * $price_per_night_cents;
+    $room_total = $room_total_cents / 100;
+    $total_price_cents += $room_total_cents;
 
-if ($result->num_rows > 0) {
+    $insertStatement->bind_param(
+      "iisssid",
+      $user_id,
+      $room_id,
+      $check_in,
+      $check_out,
+      $arrival_time,
+      $total_nights,
+      $room_total
+    );
 
-  echo json_encode([
-    "success" => false,
-    "message" => "Sorry, this room is already booked for those dates. Please choose another room or dates."
-  ]);
+    if (!$insertStatement->execute()) {
+      throw new RuntimeException("Unable to save all selected rooms.");
+    }
 
-  $sql->close();
-  $conn->close();
+    $booking_ids[] = (int) $conn->insert_id;
+  }
+  $insertStatement->close();
 
-  exit;
-}
+  if (!$conn->commit()) {
+    throw new RuntimeException("Unable to complete booking transaction.");
+  }
 
-$sql->close();
-
-// STEP 10: Calculate the number of nights
-$total_nights = $checkInDate->diff($checkOutDate)->days;
-
-// Retrieve the room price from the database
-$price_per_night = (float) $room["price_per_night"];
-
-$total_price = $total_nights * $price_per_night;
-
-// STEP 11: Save the booking
-$user_id = (int) $_SESSION["user_id"];
-$room_id = (int) $room["id"];
-
-$sql = $conn->prepare(
-  "INSERT INTO bookings
-    (
-        user_id,
-        room_id,
-        check_in,
-        check_out,
-        arrival_time,
-        total_nights,
-        total_price,
-        booking_status
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')"
-);
-
-$sql->bind_param(
-  "iisssid",
-  $user_id,
-  $room_id,
-  $check_in,
-  $check_out,
-  $arrival_time,
-  $total_nights,
-  $total_price
-);
-
-if ($sql->execute()) {
-
-  $booking_id = $conn->insert_id;
+  $room_names = array_map(
+    static fn($room) => $room["room_name"],
+    $rooms
+  );
 
   echo json_encode([
     "success" => true,
     "message" => "Your booking request was submitted successfully!",
-    "booking_id" => $booking_id,
-    "room_name" => $room["room_name"],
+    "booking_id" => $booking_ids[0],
+    "booking_ids" => $booking_ids,
+    "room_count" => count($rooms),
+    "room_names" => $room_names,
     "check_in" => $check_in,
     "check_out" => $check_out,
     "total_nights" => $total_nights,
-    "total_price" => number_format($total_price, 2),
+    "total_price" => number_format($total_price_cents / 100, 2),
     "booking_status" => "pending"
   ]);
-} else {
-
+} catch (InvalidArgumentException $error) {
+  $conn->rollback();
+  http_response_code(400);
+  echo json_encode([
+    "success" => false,
+    "message" => $error->getMessage()
+  ]);
+} catch (Throwable $error) {
+  $conn->rollback();
+  error_log("Unable to create room booking: " . $error->getMessage());
+  http_response_code(500);
   echo json_encode([
     "success" => false,
     "message" => "We could not save your booking. Please try again."
   ]);
 }
 
-$sql->close();
 $conn->close();

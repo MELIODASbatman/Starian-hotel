@@ -12,6 +12,7 @@
   var cartButton = document.getElementById("open-cart");
   var cartCount = document.getElementById("cart-count");
   var cartFeedback = document.getElementById("cart-feedback");
+  var selectionFeedback = document.getElementById("menu-selection-feedback");
   var cartDialog = document.getElementById("cart-dialog");
   var closeCartButton = document.getElementById("close-cart");
   var continueShoppingButton = document.getElementById("continue-shopping");
@@ -241,6 +242,58 @@
     });
   });
 
+  var featuredFoodNames = {
+    chicken: "grilled chicken",
+    burger: "beef burger",
+    pasta: "vegetable pasta",
+    fish: "fish and chips",
+    salad: "chicken caesar salad",
+  };
+  var selectedFoodKey = new URLSearchParams(window.location.search).get("food");
+
+  if (selectedFoodKey) {
+    var selectedFoodName = featuredFoodNames[selectedFoodKey];
+    var selectedCard = null;
+
+    if (selectedFoodName) {
+      document.querySelectorAll(".food-card").forEach(function (card) {
+        var heading = card.querySelector("h3");
+        if (
+          heading &&
+          heading.textContent.trim().toLowerCase() === selectedFoodName
+        ) {
+          selectedCard = card;
+        }
+      });
+    }
+
+    if (!selectedFoodName || !selectedCard) {
+      selectionFeedback.textContent =
+        "That featured dish is not currently available on our menu. Please choose another item.";
+      selectionFeedback.classList.add("error");
+      selectionFeedback.hidden = false;
+    } else {
+      var selectedHeading = selectedCard.querySelector("h3");
+      var selectedQuantity = selectedCard.querySelector(".food-quantity");
+      var selectedAddButton = selectedCard.querySelector(".food-order-button");
+
+      selectedCard.classList.add("food-card-selected");
+      selectionFeedback.textContent =
+        selectedHeading.textContent.trim() +
+        " selected. Choose a quantity and add it to your cart.";
+      selectionFeedback.hidden = false;
+      selectedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      window.setTimeout(function () {
+        if (selectedQuantity) {
+          selectedQuantity.focus({ preventScroll: true });
+        } else if (selectedAddButton) {
+          selectedAddButton.focus({ preventScroll: true });
+        }
+      }, 250);
+    }
+  }
+
   cartButton.addEventListener("click", function () {
     cartDialog.showModal();
     closeCartButton.focus();
@@ -317,18 +370,10 @@
 
       saveOrder();
 
-      renderOrder();
-
-      var message =
-        result.message +
-        " Order number: " +
-        result.order_id +
-        ". Total: " +
-        formatPrice(Number(result.total_amount));
-
-      orderStatus.textContent = message;
-
-      cartFeedback.textContent = message;
+      window.location.assign(
+        "foodcheckout.php?order_id=" + encodeURIComponent(result.order_id),
+      );
+      return;
     } catch (error) {
       console.error("Order submission failed:", error);
 

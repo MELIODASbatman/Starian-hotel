@@ -1,8 +1,23 @@
+var roomsInBooking = [];
+
+function getRequestedRoomCodes() {
+  const roomSelect = document.getElementById("room-option");
+  const roomCodes = roomsInBooking.slice();
+
+  if (roomSelect.value && roomCodes.indexOf(roomSelect.value) === -1) {
+    roomCodes.push(roomSelect.value);
+  }
+
+  return roomCodes;
+}
+
 (function () {
   "use strict";
 
   var categorySelect = document.getElementById("room-category");
   var roomSelect = document.getElementById("room-option");
+  var addRoomButton = document.getElementById("add-room-btn");
+  var selectedRoomsList = document.getElementById("selected-rooms");
   var checkIn = document.getElementById("check-in");
   var checkOut = document.getElementById("check-out");
   var arrivalTime = document.getElementById("arrival-time");
@@ -29,6 +44,38 @@
       }
     });
     roomSelect.value = keepValue || "";
+  }
+
+  function roomLabel(roomCode) {
+    for (var groupIndex = 0; groupIndex < allGroups.length; groupIndex += 1) {
+      var option = allGroups[groupIndex].querySelector(
+        'option[value="' + roomCode + '"]',
+      );
+      if (option) {
+        return option.textContent;
+      }
+    }
+    return roomCode;
+  }
+
+  function renderSelectedRooms() {
+    selectedRoomsList.replaceChildren();
+    selectedRoomsList.hidden = roomsInBooking.length === 0;
+
+    roomsInBooking.forEach(function (roomCode) {
+      var item = document.createElement("li");
+      var name = document.createElement("span");
+      var removeButton = document.createElement("button");
+
+      name.textContent = roomLabel(roomCode);
+      removeButton.type = "button";
+      removeButton.className = "remove-selected-room";
+      removeButton.dataset.roomCode = roomCode;
+      removeButton.setAttribute("aria-label", "Remove " + roomLabel(roomCode));
+      removeButton.textContent = "Remove";
+      item.append(name, removeButton);
+      selectedRoomsList.appendChild(item);
+    });
   }
 
   function highlightCard(roomId) {
@@ -133,6 +180,56 @@
       "Confirm your dates and arrival time, then press <strong>Check Availability</strong>.";
   });
 
+  addRoomButton.addEventListener("click", function () {
+    if (!roomSelect.value) {
+      showBookingNotification(
+        "Choose a room",
+        "Select a room before adding it to your booking.",
+        "error",
+      );
+      return;
+    }
+
+    if (roomsInBooking.indexOf(roomSelect.value) !== -1) {
+      showBookingNotification(
+        "Room already added",
+        "That room is already in your booking.",
+        "error",
+      );
+      return;
+    }
+
+    if (roomsInBooking.length >= 16) {
+      showBookingNotification(
+        "Room limit reached",
+        "You can book up to 16 different rooms at a time.",
+        "error",
+      );
+      return;
+    }
+
+    var addedRoomCode = roomSelect.value;
+    roomsInBooking.push(addedRoomCode);
+    renderSelectedRooms();
+    result.textContent =
+      roomLabel(addedRoomCode) +
+      " added. Choose another room or continue to check availability.";
+    roomSelect.value = "";
+    highlightCard("");
+  });
+
+  selectedRoomsList.addEventListener("click", function (event) {
+    var removeButton = event.target.closest("[data-room-code]");
+    if (!removeButton) {
+      return;
+    }
+
+    roomsInBooking = roomsInBooking.filter(function (roomCode) {
+      return roomCode !== removeButton.dataset.roomCode;
+    });
+    renderSelectedRooms();
+  });
+
   chooseButtons.forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -152,10 +249,19 @@
   }
 
   checkBtn.addEventListener("click", async function () {
-    if (!roomSelect.value) {
+    var roomCodes = getRequestedRoomCodes();
+    if (roomCodes.length === 0) {
       showBookingNotification(
         "Choose a room",
-        "Please choose a room before checking availability.",
+        "Please choose at least one room before checking availability.",
+        "error",
+      );
+      return;
+    }
+    if (roomCodes.length > 16) {
+      showBookingNotification(
+        "Room limit reached",
+        "You can book up to 16 different rooms at a time.",
         "error",
       );
       return;
@@ -178,14 +284,16 @@
       return;
     }
 
-    var label = roomSelect.options[roomSelect.selectedIndex].text;
+    var labels = roomCodes.map(roomLabel);
     var checkButtonLabel = checkBtn.innerHTML;
     checkBtn.disabled = true;
     checkBtn.textContent = "Checking...";
 
     try {
       var formData = new FormData();
-      formData.append("room_option", roomSelect.value);
+      roomCodes.forEach(function (roomCode) {
+        formData.append("room_codes[]", roomCode);
+      });
       formData.append("check_in", checkIn.value);
       formData.append("check_out", checkOut.value);
       formData.append("arrival_time", arrivalTime.value);
@@ -200,8 +308,7 @@
       if (!response.ok || !availability.success) {
         showBookingNotification(
           "Could not check availability",
-          availability.message ||
-            "Please try again in a moment.",
+          availability.message || "Please try again in a moment.",
           "error",
         );
         return;
@@ -217,21 +324,21 @@
         return;
       }
 
-      var card = document.getElementById(roomSelect.value);
-      var priceEl = card && card.querySelector(".room-price strong");
-      var priceText = "";
-      if (priceEl) {
-        var perNight = parseInt(priceEl.textContent.replace(/[^\d]/g, ""), 10);
-        priceText =
-          " Estimated total: <strong>KSh " +
-          (perNight * nights).toLocaleString("en-KE") +
-          "</strong>.";
-      }
+      var estimatedTotal = roomCodes.reduce(function (total, roomCode) {
+        var card = document.getElementById(roomCode);
+        var priceEl = card && card.querySelector(".room-price strong");
+        return (
+          total +
+          (priceEl
+            ? parseInt(priceEl.textContent.replace(/[^\d]/g, ""), 10) * nights
+            : 0)
+        );
+      }, 0);
 
-      result.innerHTML =
-        "<strong>" +
-        label +
-        "</strong> is available from " +
+      result.textContent =
+        labels.join(", ") +
+        (roomCodes.length === 1 ? " is" : " are") +
+        " available from " +
         checkIn.value +
         " to " +
         checkOut.value +
@@ -241,10 +348,13 @@
         (nights > 1 ? "s" : "") +
         "), arriving at " +
         arrivalTime.value +
-        "." +
-        priceText;
+        ". Estimated total for " +
+        roomCodes.length +
+        (roomCodes.length === 1 ? " room: KSh " : " rooms: KSh ") +
+        estimatedTotal.toLocaleString("en-KE") +
+        ".";
       showBookingNotification(
-        "Room available",
+        roomCodes.length === 1 ? "Room available" : "Rooms available",
         availability.message,
         "success",
       );
@@ -313,19 +423,61 @@ function showBookingNotification(title, message, type) {
     bookingNotification.classList.add("show");
   });
 
-  bookingNotificationTimeout = window.setTimeout(function () {
-    bookingNotification.classList.remove("show");
-    window.setTimeout(function () {
-      if (!bookingNotification.classList.contains("show")) {
-        bookingNotification.hidden = true;
-      }
-    }, 220);
-  }, type === "error" ? 6000 : 8000);
+  bookingNotificationTimeout = window.setTimeout(
+    function () {
+      bookingNotification.classList.remove("show");
+      window.setTimeout(function () {
+        if (!bookingNotification.classList.contains("show")) {
+          bookingNotification.hidden = true;
+        }
+      }, 220);
+    },
+    type === "error" ? 6000 : 8000,
+  );
 }
 
-function showBookingResult(title, message) {
-  if (bookingResult) {
-    bookingResult.textContent = title + ": " + message;
+function showBookingResult(title, message, bookingIds = null) {
+  if (!bookingResult) {
+    return;
+  }
+
+  // Display the booking title and message.
+  bookingResult.textContent = title + ": " + message;
+
+  // Remove an old payment button if one exists.
+  const oldPaymentButton = document.getElementById("proceed-to-payment-btn");
+
+  if (oldPaymentButton) {
+    oldPaymentButton.remove();
+  }
+
+  // Only show the payment button for a successfully created booking.
+  const ids = Array.isArray(bookingIds)
+    ? bookingIds
+    : bookingIds
+      ? [bookingIds]
+      : [];
+
+  if (ids.length > 0) {
+    const paymentButton = document.createElement("button");
+
+    paymentButton.id = "proceed-to-payment-btn";
+    paymentButton.type = "button";
+    paymentButton.textContent =
+      "Proceed to Payment (" + ids.length + (ids.length === 1 ? " room)" : " rooms)");
+    paymentButton.className = "pay-button";
+
+    paymentButton.addEventListener("click", function () {
+      const parameter = ids.length === 1 ? "booking_id=" : "booking_ids=";
+      window.location.href =
+        "checkout.php?" +
+        parameter +
+        encodeURIComponent(ids.join(","));
+    });
+
+    bookingResult.appendChild(document.createElement("br"));
+    bookingResult.appendChild(document.createElement("br"));
+    bookingResult.appendChild(paymentButton);
   }
 }
 
@@ -357,8 +509,9 @@ if (bookNowBtn) {
     }
 
     // Validate required fields
+    const roomCodes = getRequestedRoomCodes();
     if (
-      !roomOption.value ||
+      roomCodes.length === 0 ||
       !checkIn.value ||
       !checkOut.value ||
       !arrivalTime.value
@@ -369,11 +522,20 @@ if (bookNowBtn) {
       );
       return;
     }
+    if (roomCodes.length > 16) {
+      showBookingResult(
+        "Room limit reached",
+        "You can book up to 16 different rooms at a time.",
+      );
+      return;
+    }
 
     // Prepare the booking information
     const formData = new FormData();
 
-    formData.append("room_option", roomOption.value);
+    roomCodes.forEach(function (roomCode) {
+      formData.append("room_codes[]", roomCode);
+    });
     formData.append("check_in", checkIn.value);
     formData.append("check_out", checkOut.value);
     formData.append("arrival_time", arrivalTime.value);
@@ -393,29 +555,34 @@ if (bookNowBtn) {
 
       // Display the result
       if (result.success) {
-        const roomName =
-          roomOption.options[roomOption.selectedIndex].text || result.room_name;
+        const bookingMessage =
+          result.message +
+          "\n" +
+          result.room_count +
+          (result.room_count === 1 ? " room · " : " rooms · ") +
+          result.total_nights +
+          (result.total_nights === 1 ? " night" : " nights") +
+          "\n" +
+          result.check_in +
+          " to " +
+          result.check_out +
+          " · KSh " +
+          result.total_price +
+          "\nStatus: " +
+          result.booking_status;
         showBookingResult(
           "Booking request received",
-          result.message +
-            "\n" +
-            roomName +
-            " · " +
-            result.total_nights +
-            (result.total_nights === 1 ? " night" : " nights") +
-            "\n" +
-            result.check_in +
-            " to " +
-            result.check_out +
-            " · KSh " +
-            result.total_price +
-            "\nStatus: " +
-            result.booking_status,
+          bookingMessage,
+          result.booking_ids || [result.booking_id],
         );
+        roomsInBooking = [];
+        document.getElementById("selected-rooms").replaceChildren();
+        document.getElementById("selected-rooms").hidden = true;
       } else {
         showBookingResult(
           "Booking not completed",
-          result.message || "We could not process your booking. Please try again.",
+          result.message ||
+            "We could not process your booking. Please try again.",
         );
       }
     } catch (error) {

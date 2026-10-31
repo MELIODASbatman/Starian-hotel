@@ -270,6 +270,10 @@
   border: none;
 }
 
+.menu-container > a.food-card {
+  text-decoration: none;
+}
+
 .food-action {
   display: inline-block;
   color: #153b5e;

@@ -35,15 +35,24 @@ body {
 
 .profile-avatar {
   display: grid;
-  width: 58px;
-  height: 58px;
+  width: 76px;
+  height: 76px;
   margin: 0 auto 9px;
   place-items: center;
-  border: 3px solid rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  padding: 4px;
+  border: 3px solid #bceeff;
   border-radius: 50%;
-  background: #eaf2fa;
+  background: #e2f8ff;
   color: #21496d;
   font-size: 27px;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
 }
 
 .customer-profile h3 {
