@@ -12,10 +12,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
   $roomCode = trim($_POST["room_code"] ?? "");
   $roomName = trim($_POST["room_name"] ?? "");
+  $category = trim($_POST["category"] ?? "");
+  $description = trim($_POST["description"] ?? "");
+  $bedType = trim($_POST["bed_type"] ?? "");
+  $roomDetails = trim($_POST["room_details"] ?? "");
+  $amenities = trim($_POST["amenities"] ?? "");
+
   $price = $_POST["price_per_night"] ?? "";
 
+  $wifi = isset($_POST["wifi"]) ? 1 : 0;
+  $roomService = isset($_POST["room_service"]) ? 1 : 0;
+
   // Validate input
-  if ($roomCode === "" || $roomName === "" || !is_numeric($price) || (float)$price <= 0) {
+  $allowedCategories = ["standard", "deluxe", "executive", "family"];
+
+  if (
+    $roomCode === "" ||
+    $roomName === "" ||
+    !in_array($category, $allowedCategories, true) ||
+    $description === "" ||
+    $bedType === "" ||
+    $roomDetails === "" ||
+    $amenities === "" ||
+    !is_numeric($price) ||
+    !is_finite((float)$price) ||
+    (float)$price <= 0
+  ) {
 
     $message = "Please enter valid room details.";
     $messageType = "error";
@@ -66,21 +88,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Save room details in database
         $stmt = $conn->prepare("
-                    INSERT INTO rooms
-                    (room_code, room_name, price_per_night, status, image)
-                    VALUES (?, ?, ?, 'available', ?)
-                ");
+    INSERT INTO rooms
+    (
+        room_code,
+        room_name,
+        price_per_night,
+        status,
+        image,
+        category,
+        description,
+        bed_type,
+        wifi,
+        room_service,
+        room_details,
+        amenities
+    )
+    VALUES (?, ?, ?, 'available', ?, ?, ?, ?, ?, ?, ?, ?)
+");
 
         $price = (float)$price;
 
         $stmt->bind_param(
-          "ssds",
+          "ssdssssiisss",
           $roomCode,
           $roomName,
           $price,
-          $imageName
+          $imageName,
+          $category,
+          $description,
+          $bedType,
+          $wifi,
+          $roomService,
+          $roomDetails,
+          $amenities
         );
-
         if ($stmt->execute()) {
 
           $message = "Room added successfully!";
@@ -122,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-  <link rel="stylesheet" href="admin.css?v=20261031-rooms">
+  <link rel="stylesheet" href="admin.css?v=20261102-room-form-theme">
 </head>
 
 <body>
@@ -216,6 +257,95 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   required>
                 <small>Choose a clear name guests and staff will recognize.</small>
               </div>
+
+              <div class="form-group">
+
+                <label for="category">Room Category <span aria-hidden="true">*</span></label>
+
+                <select name="category" id="category" required>
+
+                  <option value="">Select Category</option>
+
+                  <option value="standard" <?= ($_POST["category"] ?? "") === "standard" ? "selected" : "" ?>>Standard</option>
+                  <option value="deluxe" <?= ($_POST["category"] ?? "") === "deluxe" ? "selected" : "" ?>>Deluxe</option>
+                  <option value="executive" <?= ($_POST["category"] ?? "") === "executive" ? "selected" : "" ?>>Executive</option>
+                  <option value="family" <?= ($_POST["category"] ?? "") === "family" ? "selected" : "" ?>>Family</option>
+
+                </select>
+
+              </div>
+              <div class="form-group">
+
+                <label for="description">Short Description <span aria-hidden="true">*</span></label>
+
+                <textarea
+                  name="description"
+                  id="description"
+                  rows="3"
+                  placeholder="Describe the room briefly..."
+                  required><?= htmlspecialchars($_POST["description"] ?? "", ENT_QUOTES, "UTF-8") ?></textarea>
+
+              </div>
+              <div class="form-group">
+
+                <label for="bed_type">Bed Type <span aria-hidden="true">*</span></label>
+
+                <input
+                  type="text"
+                  name="bed_type"
+                  id="bed_type"
+                  placeholder="Example: 1 Queen Bed"
+                  value="<?= htmlspecialchars($_POST["bed_type"] ?? "", ENT_QUOTES, "UTF-8") ?>"
+                  required>
+
+              </div>
+
+              <div class="form-group">
+
+                <label for="room_details">Room Details <span aria-hidden="true">*</span></label>
+
+                <textarea
+                  name="room_details"
+                  id="room_details"
+                  rows="4"
+                  placeholder="Provide more information about the room..."
+                  required><?= htmlspecialchars($_POST["room_details"] ?? "", ENT_QUOTES, "UTF-8") ?></textarea>
+
+              </div>
+
+              <div class="form-group">
+
+                <label for="amenities">Room Amenities <span aria-hidden="true">*</span></label>
+
+                <textarea
+                  name="amenities"
+                  id="amenities"
+                  rows="3"
+                  placeholder="Private bathroom, Television, Wardrobe..."
+                  required><?= htmlspecialchars($_POST["amenities"] ?? "", ENT_QUOTES, "UTF-8") ?></textarea>
+
+                <small>Separate each amenity using a comma.</small>
+
+              </div>
+
+              <div class="form-group">
+
+                <label>Room Facilities</label>
+
+                <div class="checkbox-group">
+                  <label class="checkbox-item">
+                    <input type="checkbox" name="wifi" value="1" <?= ($_SERVER["REQUEST_METHOD"] === "POST" ? isset($_POST["wifi"]) : true) ? "checked" : "" ?>>
+                    <span>Free Wi-Fi</span>
+                  </label>
+
+                  <label class="checkbox-item">
+                    <input type="checkbox" name="room_service" value="1" <?= ($_SERVER["REQUEST_METHOD"] === "POST" ? isset($_POST["room_service"]) : true) ? "checked" : "" ?>>
+                    <span>Room Service</span>
+                  </label>
+                </div>
+
+              </div>
+
 
               <div class="room-form-field">
                 <label for="price_per_night">Price per night (KSh) <span aria-hidden="true">*</span></label>

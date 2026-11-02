@@ -892,34 +892,39 @@ a {
 .room-form-panel {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dfeaf5;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 28px rgba(9, 56, 90, 0.06);
 }
 
 .room-form-intro {
   display: flex;
   align-items: center;
-  gap: 13px;
-  margin-bottom: 22px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #edf3f8;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid #e8f0f8;
+  background: rgba(244, 250, 255, 0.66);
 }
 
 .room-form-icon {
   display: grid;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #e8f4ff;
   color: #1687e8;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .room-form-intro h2 {
   margin: 0;
-  color: #174b79;
-  font-size: 16px;
+  color: #1a4f7a;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -930,61 +935,139 @@ a {
 }
 
 .room-form-intro p span,
-.room-form-field label span {
+.room-form-field label span,
+.form-group label span {
   color: #d84b4b;
 }
 
 .room-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px 18px;
+  gap: 18px 22px;
+  padding: 20px 18px 6px;
 }
 
+.form-group,
 .room-form-field {
   display: grid;
   align-content: start;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
 }
 
+.form-group label,
 .room-form-field label {
-  color: #315d81;
+  color: #1f4e76;
   font-size: 11px;
   font-weight: 800;
 }
 
+.form-group > input,
+.form-group > select,
+.form-group > textarea,
 .room-form-field > input,
-.room-price-input {
+.room-price-input,
+.checkbox-group {
   width: 100%;
   min-height: 42px;
-  border: 1px solid #d7eafa;
+  border: 1px solid #cfe0f0;
   border-radius: 8px;
   background: #fff;
   color: #174b79;
   font: inherit;
   font-size: 11px;
+  box-shadow: inset 0 1px 2px rgba(8, 50, 82, 0.02);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
+.form-group > input,
+.form-group > select,
+.form-group > textarea,
+.room-form-field > input,
+.room-price-input,
+.checkbox-group,
+.button-secondary,
+.button-primary {
+  font-family: "DM Sans", Arial, sans-serif;
+}
+
+.form-group > input:not([type="checkbox"]),
+.form-group > select,
+.form-group > textarea,
 .room-form-field > input:not([type="file"]) {
   padding: 0 12px;
 }
 
-.room-form-field input::placeholder {
-  color: #91a8bc;
+.form-group > textarea,
+.room-form-field textarea {
+  min-height: 96px;
+  padding: 10px 12px !important;
+  resize: vertical;
 }
 
+.form-group > select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #4878a4 50%),
+    linear-gradient(135deg, #4878a4 50%, transparent 50%),
+    linear-gradient(to right, #fff, #fff);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 13px) calc(50% - 2px),
+    0 0;
+  background-size: 5px 5px, 5px 5px, 100% 100%;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.room-form-field input::placeholder {
+  color: #8ca6bb;
+}
+
+.form-group > input:focus,
+.form-group > select:focus,
+.form-group > textarea:focus,
 .room-form-field > input:focus,
-.room-price-input:focus-within {
-  border-color: #69b4ed;
+.room-price-input:focus-within,
+.checkbox-group:focus-within {
+  border-color: #6cb4ee;
   outline: 0;
   box-shadow: 0 0 0 3px rgba(22, 135, 232, 0.12);
 }
 
+.form-group > small,
 .room-form-field small {
-  color: #819bb2;
+  color: #829ab1;
   font-size: 9px;
-  line-height: 1.5;
+  line-height: 1.45;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.checkbox-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #24577d;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkbox-item input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #1687e8;
 }
 
 .room-price-input {
@@ -995,7 +1078,7 @@ a {
 
 .room-price-input span {
   padding: 0 11px;
-  color: #6484a2;
+  color: #6787a2;
   font-size: 10px;
   font-weight: 700;
 }
@@ -1014,17 +1097,20 @@ a {
 }
 
 .room-form-field > input[type="file"] {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
   padding: 5px;
   background: #fbfdff;
 }
 
 .room-form-field input[type="file"]::file-selector-button {
-  min-height: 29px;
+  min-height: 28px;
   margin-right: 10px;
   padding: 0 10px;
-  border: 0;
+  border: 1px solid #d7eafa;
   border-radius: 6px;
-  background: #eaf5ff;
+  background: #edf7ff;
   color: #176baa;
   font: inherit;
   font-size: 10px;
@@ -1039,9 +1125,8 @@ a {
 .room-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 9px;
-  margin-top: 24px;
-  padding-top: 18px;
+  gap: 10px;
+  padding: 18px 18px 20px;
   border-top: 1px solid #edf3f8;
 }
 
