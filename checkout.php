@@ -232,10 +232,22 @@ function escapeHTML($value)
         </div>
 
         <?php foreach ($bookings as $booking): ?>
+          <?php
+          $bookingImageFilename = basename(rawurldecode((string)($booking["room_image"] ?? "")));
+          $bookingImage = "img/dbed.jpg";
+
+          if ($bookingImageFilename !== "") {
+            if (is_file(__DIR__ . "/img/rooms/" . $bookingImageFilename)) {
+              $bookingImage = "img/rooms/" . rawurlencode($bookingImageFilename);
+            } elseif (is_file(__DIR__ . "/img/" . $bookingImageFilename)) {
+              $bookingImage = "img/" . rawurlencode($bookingImageFilename);
+            }
+          }
+          ?>
           <div class="room-summary">
             <img
               class="summary-room-image"
-              src="<?= !empty($booking['room_image']) ? 'img/' . rawurldecode(basename($booking['room_image'])) : 'img/dbed.jpg' ?>"
+              src="<?= htmlspecialchars($bookingImage, ENT_QUOTES, "UTF-8") ?>"
               alt="<?= escapeHTML($booking["room_name"]) ?>" />
             <div class="room-summary-details">
               <h4><?= escapeHTML($booking["room_name"]) ?></h4>

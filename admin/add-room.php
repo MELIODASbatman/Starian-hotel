@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $extension = $allowedTypes[$mimeType];
       $imageName = bin2hex(random_bytes(16)) . "." . $extension;
 
-      $uploadDirectory = __DIR__ . "/../img/rooms/";
+      $uploadDirectory = __DIR__ . "/../img/";
       $imagePath = $uploadDirectory . $imageName;
 
       if (!is_dir($uploadDirectory)) {
@@ -106,10 +106,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     VALUES (?, ?, ?, 'available', ?, ?, ?, ?, ?, ?, ?, ?)
 ");
 
-        $price = (float)$price;
-
         $stmt->bind_param(
-          "ssdssssiisss",
+          "ssdssssiiss",
           $roomCode,
           $roomName,
           $price,

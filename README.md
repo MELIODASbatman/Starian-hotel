@@ -29,6 +29,143 @@ UPDATE rooms SET image = 'fbed3.png' WHERE room_code = 'family-3';
 UPDATE rooms SET image = 'fbed4.jpg' WHERE room_code = 'family-4';
 ```
 
+```sql
+UPDATE rooms
+SET
+    room_name = CASE room_code
+        WHEN 'standard-1' THEN 'Standard Comfort Room'
+        WHEN 'standard-2' THEN 'Window View Room'
+        WHEN 'standard-3' THEN 'Spacious Standard Room'
+        WHEN 'standard-4' THEN 'Standard City Room'
+        WHEN 'deluxe-1' THEN 'Mordern Deluxe Room'
+        WHEN 'deluxe-2' THEN 'Deluxe Comfort Room'
+        WHEN 'deluxe-3' THEN 'Spacious Deluxe Room'
+        WHEN 'deluxe-4' THEN 'Deluxe Premium Room'
+        WHEN 'executive-1' THEN 'Executive Premium Suite'
+        WHEN 'executive-2' THEN 'Executive City Suite'
+        WHEN 'executive-3' THEN 'Executive Lounge Suite'
+        WHEN 'executive-4' THEN 'Executive Business Suite'
+        WHEN 'family-1' THEN 'Family Comfort Room'
+        WHEN 'family-2' THEN 'Family Mordern Room'
+        WHEN 'family-3' THEN 'Family Premium Suite'
+        WHEN 'family-4' THEN 'Family Grand Suite'
+    END,
+    category = CASE room_code
+        WHEN 'standard-1' THEN 'standard'
+        WHEN 'standard-2' THEN 'standard'
+        WHEN 'standard-3' THEN 'standard'
+        WHEN 'standard-4' THEN 'standard'
+        WHEN 'deluxe-1' THEN 'deluxe'
+        WHEN 'deluxe-2' THEN 'deluxe'
+        WHEN 'deluxe-3' THEN 'deluxe'
+        WHEN 'deluxe-4' THEN 'deluxe'
+        WHEN 'executive-1' THEN 'executive'
+        WHEN 'executive-2' THEN 'executive'
+        WHEN 'executive-3' THEN 'executive'
+        WHEN 'executive-4' THEN 'executive'
+        WHEN 'family-1' THEN 'family'
+        WHEN 'family-2' THEN 'family'
+        WHEN 'family-3' THEN 'family'
+        WHEN 'family-4' THEN 'family'
+    END,
+    price_per_night = CASE room_code
+        WHEN 'standard-1' THEN 2500
+        WHEN 'standard-2' THEN 3000
+        WHEN 'standard-3' THEN 3500
+        WHEN 'standard-4' THEN 4000
+        WHEN 'deluxe-1' THEN 4500
+        WHEN 'deluxe-2' THEN 5000
+        WHEN 'deluxe-3' THEN 5500
+        WHEN 'deluxe-4' THEN 6000
+        WHEN 'executive-1' THEN 6500
+        WHEN 'executive-2' THEN 7000
+        WHEN 'executive-3' THEN 7500
+        WHEN 'executive-4' THEN 8000
+        WHEN 'family-1' THEN 8500
+        WHEN 'family-2' THEN 9000
+        WHEN 'family-3' THEN 9500
+        WHEN 'family-4' THEN 10000
+    END,
+    description = CASE room_code
+        WHEN 'standard-1' THEN 'A comfortable and affordable room designed for a relaxing stay.'
+        WHEN 'standard-2' THEN 'Enjoy a peaceful stay in this window-facing room with a welcoming atmosphere.'
+        WHEN 'standard-3' THEN 'A spacious room ideal for friends or guests travelling together.'
+        WHEN 'standard-4' THEN 'A comfortable city room offering convenience for business and leisure travellers.'
+        WHEN 'deluxe-1' THEN 'A beautifully furnished deluxe room with a relaxing garden atmosphere.'
+        WHEN 'deluxe-2' THEN 'Experience extra comfort in this elegant deluxe room with a spacious king bed.'
+        WHEN 'deluxe-3' THEN 'A spacious deluxe  room offering comfortable accommodation for families or friends.'
+        WHEN 'deluxe-4' THEN 'Enjoy an upgraded stay in this premium deluxe room with elegant furnishings.'
+        WHEN 'executive-1' THEN 'An executive suite designed for business travellers seeking comfort and outdoor experience.'
+        WHEN 'executive-2' THEN 'A stylish executive suite offering a comfortable stay with city-inspired surroundings.'
+        WHEN 'executive-3' THEN 'An elegant executive suite designed for guests who appreciate extra comfort and relaxation.'
+        WHEN 'executive-4' THEN 'A premium executive suite offering spacious accommodation and nice looking premium room.'
+        WHEN 'family-1' THEN 'A welcoming family room offering comfortable accommodation for the whole family.'
+        WHEN 'family-2' THEN 'A relaxing mordern looking room with a touch of simplicity but highly comfortable.'
+        WHEN 'family-3' THEN 'A spacious connecting suite designed to accommodate families travelling together.'
+        WHEN 'family-4' THEN 'A grand family suite offering generous space and flexible sleeping arrangements.'
+    END,
+    bed_type = CASE room_code
+        WHEN 'standard-1' THEN '1 Queen Bed'
+        WHEN 'standard-2' THEN '1 Queen Bed'
+        WHEN 'standard-3' THEN '1 Queen Bed'
+        WHEN 'standard-4' THEN '1 Queen Bed'
+        WHEN 'deluxe-1' THEN '1 Queen Bed'
+        WHEN 'deluxe-2' THEN '1 King Bed'
+        WHEN 'deluxe-3' THEN '1 Queen Beds'
+        WHEN 'deluxe-4' THEN '1 King Bed'
+        WHEN 'executive-1' THEN '1 King Bed'
+        WHEN 'executive-2' THEN '1 King Bed'
+        WHEN 'executive-3' THEN '1 King Bed'
+        WHEN 'executive-4' THEN '1 King Bed'
+        WHEN 'family-1' THEN '2 Single Beds'
+        WHEN 'family-2' THEN '2 Queen Beds'
+        WHEN 'family-3' THEN '2 King Beds'
+        WHEN 'family-4' THEN '2 Queen Beds and 1 Sofa Bed'
+    END,
+    room_details = CASE room_code
+        WHEN 'standard-1' THEN 'A practical and comfortable room featuring a double bed, private bathroom, wardrobe, bedside table and seating area. Suitable for individual guests and couples.'
+        WHEN 'standard-2' THEN 'A peaceful room featuring a queen bed, a nice window to view a nice beautiful garden.'
+        WHEN 'standard-3' THEN 'A room with queen bed, private bathroom, wardrobe, bedside tables and a comfortable layout for two guests.'
+        WHEN 'standard-4' THEN 'A convenient city room featuring a queen bed, private bathroom, wardrobe, work-friendly space and comfortable furnishings.'
+        WHEN 'deluxe-1' THEN 'An upgraded room featuring a queen bed, comfortable furnishings, private bathroom, wardrobe and a relaxing garden atmosphere.'
+        WHEN 'deluxe-2' THEN 'A spacious deluxe room featuring a king bed, elegant furnishings, private bathroom, wardrobe and additional relaxation space.'
+        WHEN 'deluxe-3' THEN 'A generously arranged room with queen bed, private bathroom, wardrobe and comfortable space for guests travelling together.'
+        WHEN 'deluxe-4' THEN 'A premium room featuring a king bed, stylish interior finishes, private bathroom, wardrobe and a relaxing seating area.'
+        WHEN 'executive-1' THEN 'A business-friendly suite featuring a king bed, comfortable work area, private bathroom, wardrobe and spacious interior.'
+        WHEN 'executive-2' THEN 'An elegant suite featuring a king bed, comfortable seating, private bathroom, wardrobe and a relaxing city-style atmosphere.'
+        WHEN 'executive-3' THEN 'A refined suite featuring a king bed, spacious seating area, private bathroom and comfortable furnishings for relaxation.'
+        WHEN 'executive-4' THEN 'A spacious premium suite featuring a king bed, sofa bed, private bathroom, wardrobe, comfortable seating and additional living space.'
+        WHEN 'family-1' THEN 'A family-friendly room featuring one queen bed and two single beds, private bathroom, wardrobe and enough sleeping space for family members.'
+        WHEN 'family-2' THEN 'A spacious mordern family room featuring two queen beds, private bathroom, wardrobe and comfortable furnishings.'
+        WHEN 'family-3' THEN 'A connecting family suite featuring one king bed and two single beds, private bathroom and generous space for family accommodation.'
+        WHEN 'family-4' THEN 'A grand family suite featuring two queen beds and a sofa bed, private bathroom, wardrobe and generous living space.'
+    END,
+    amenities = CASE room_code
+        WHEN 'standard-1' THEN 'Comfortable bed, Private bathroom, Wardrobe, Bedside table, Seating area'
+        WHEN 'standard-2' THEN 'Queen bed, Private bathroom, Wardrobe, Garden view, Seating area'
+        WHEN 'standard-3' THEN 'Queen bed, Private bathroom, Wardrobe, Bedside tables, Seating area'
+        WHEN 'standard-4' THEN 'Queen bed, Private bathroom, Wardrobe, Work area, Seating area'
+        WHEN 'deluxe-1' THEN 'Queen bed, Private bathroom, Wardrobe, Comfortable seating'
+        WHEN 'deluxe-2' THEN 'King bed, Private bathroom, Spacious interior, Wardrobe, Seating area'
+        WHEN 'deluxe-3' THEN 'Queen bed, Private bathroom, Wardrobe, Spacious accommodation'
+        WHEN 'deluxe-4' THEN 'King bed, Premium furnishings, Private bathroom, Wardrobe, Seating area'
+        WHEN 'executive-1' THEN 'King bed, Work area, Private bathroom, Wardrobe, Comfortable seating'
+        WHEN 'executive-2' THEN 'King bed, City surroundings, Private bathroom, Wardrobe, Seating area'
+        WHEN 'executive-3' THEN 'King bed, Lounge area, Private bathroom, Wardrobe, Premium furnishings'
+        WHEN 'executive-4' THEN 'King bed, Sofa bed, Private bathroom, Lounge area, Wardrobe, Spacious interior'
+        WHEN 'family-1' THEN 'Two single beds, Private bathroom, Wardrobe, Family accommodation'
+        WHEN 'family-2' THEN 'Two queen beds, Private bathroom, Wardrobe, Family accommodation'
+        WHEN 'family-3' THEN 'Two King beds, Private bathroom, Connecting layout, Wardrobe'
+        WHEN 'family-4' THEN 'Two queen beds, Sofa bed, Private bathroom, Spacious living area, Wardrobe'
+    END
+WHERE room_code IN (
+    'standard-1', 'standard-2', 'standard-3', 'standard-4',
+    'deluxe-1', 'deluxe-2', 'deluxe-3', 'deluxe-4',
+    'executive-1', 'executive-2', 'executive-3', 'executive-4',
+    'family-1', 'family-2', 'family-3', 'family-4'
+);
+```
+
 ## User avatars
 
 Add an `avatar` column to `users`. The default below is one of the files in
