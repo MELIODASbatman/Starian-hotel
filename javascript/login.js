@@ -7,7 +7,7 @@ if (password && togglePassword) {
 
     password.type = isPasswordHidden ? "text" : "password";
     togglePassword.className = isPasswordHidden
-      ? "fa-solid fa-eye"
+      ? "fa-solid fa-eye" //image to show the eye is open
       : "fa-solid fa-eye-slash";
     togglePassword.setAttribute(
       "aria-label",
