@@ -291,7 +291,7 @@ if ($result) {
       </a>
     </div>
   </footer>
-
+  <script src="javascript/navigation.js?v=1"></script>
   <script src="javascript/menu.js?v=6"></script>
 </body>
 

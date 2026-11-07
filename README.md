@@ -223,6 +223,21 @@ Available avatar filenames:
 To display a saved avatar in the site, use the `img/avatars/` folder followed
 by the stored filename.
 
+## Update food menu prices
+
+Update the `price` column for these existing `food_menu` items. Replace
+`0.00` with the desired price before running the statements:
+
+```sql
+UPDATE food_menu
+SET price = 700.00
+WHERE food_name = 'Vegetable Pizza';
+
+UPDATE food_menu
+SET price = 450.00
+WHERE food_name = 'Chicken Curry and Rice';
+```
+
 ## Food order tables
 
 The menu and food checkout use `food_orders` and `food_order_items`. Each

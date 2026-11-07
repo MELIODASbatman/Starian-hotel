@@ -377,39 +377,7 @@ function escapeHTML($value)
               class="payment-panel payment-panel-card"
               aria-labelledby="card-title">
               <h4 id="card-title">Card Payment</h4>
-              <p>Enter the details printed on your payment card.</p>
-              <label class="payment-field" for="card-number">Card number</label>
-              <input
-                class="payment-input"
-                type="text"
-                id="card-number"
-                inputmode="numeric"
-                autocomplete="cc-number"
-                placeholder="1234 5678 9012 3456"
-                maxlength="23" />
-              <div class="card-expiry-row">
-                <div>
-                  <label class="payment-field" for="card-expiry">Expiry date</label>
-                  <input
-                    class="payment-input"
-                    type="text"
-                    id="card-expiry"
-                    autocomplete="cc-exp"
-                    placeholder="MM / YY"
-                    maxlength="7" />
-                </div>
-                <div>
-                  <label class="payment-field" for="card-cvc">Security code</label>
-                  <input
-                    class="payment-input"
-                    type="password"
-                    id="card-cvc"
-                    inputmode="numeric"
-                    autocomplete="cc-csc"
-                    placeholder="CVC"
-                    maxlength="4" />
-                </div>
-              </div>
+              <p>Card payments are not connected in this demo. Select M-Pesa for a simulated payment.</p>
             </section>
 
             <section
@@ -437,7 +405,7 @@ function escapeHTML($value)
           hidden></p>
         <p class="payment-security">
           <i class="fa-solid fa-lock" aria-hidden="true"></i>
-          This demo checkout does not process payments.
+          M-Pesa demo only. No real money is transferred; card and PayPal are not connected.
         </p>
 
         <div class="terms-agreement">
@@ -510,7 +478,10 @@ function escapeHTML($value)
   </footer>
 
   <script src="javascript/navigation.js?v=1"></script>
-  <script src="javascript/checkout.js?v=1"></script>
+  <script>
+    const checkoutBookingIds = <?= json_encode($booking_ids) ?>;
+  </script>
+  <script src="javascript/checkout.js?v=2"></script>
 </body>
 
 </html>
