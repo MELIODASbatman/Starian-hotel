@@ -2,6 +2,10 @@
 
 session_start();
 
+require_once __DIR__ . "/php/avatar_helpers.php";
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+$isLoggedIn = isset($_SESSION["user_id"]);
+
 require_once __DIR__ . "/php/db.php";
 
 // Ensure the customer is logged in.
@@ -200,8 +204,17 @@ function escapeHTML($value)
         <li><a href="about.php">About</a></li>
         <li><a href="contact.php">Contact</a></li>
 
-        <li><a class="loginup" href="login.php">Login</a></li>
-        <li><a class="signup" href="signup.php">Sign Up</a></li>
+        <?php if ($isLoggedIn): ?>
+          <li>
+            <a href="dashboard.php" class="account-link">
+              <img src="img/avatars/<?php echo htmlspecialchars($avatarFilename, ENT_QUOTES, "UTF-8"); ?>" alt="" class="nav-avatar" />
+              <span><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span>
+            </a>
+          </li>
+        <?php else: ?>
+          <li><a class="loginup" href="login.php">Login</a></li>
+          <li><a class="signup" href="signup.php">Sign Up</a></li>
+        <?php endif; ?>
       </ul>
     </nav>
   </section>

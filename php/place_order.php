@@ -46,6 +46,24 @@ if (!is_array($input) || !isset($input["items"]) || !is_array($input["items"])) 
 }
 
 $items = $input["items"];
+// Get and validate the customer's payment method
+$paymentMethod = $input["payment_method"] ?? "";
+
+if (!in_array($paymentMethod, ["mpesa", "pay_at_hotel"], true)) {
+  http_response_code(400);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Please select a valid payment method."
+  ]);
+
+  exit;
+}
+
+// Set the initial payment status
+$paymentStatus = ($paymentMethod === "mpesa")
+  ? "pending"
+  : "unpaid";
 
 // 4. Check that the cart is not empty
 if (empty($items)) {
@@ -150,16 +168,34 @@ try {
   }
 
   // 6. Save the main order
+  // 6. Save the main order
   $userId = (int) $_SESSION["user_id"];
   $totalAmount = $totalAmount / 100;
 
   $orderStatement = $conn->prepare(
-    "INSERT INTO food_orders (user_id, total_amount)
-         VALUES (?, ?)"
+    "INSERT INTO food_orders
+    (
+        user_id,
+        total_amount,
+        payment_status,
+        payment_method
+    )
+    VALUES (?, ?, ?, ?)"
   );
 
-  $orderStatement->bind_param("id", $userId, $totalAmount);
+  $orderStatement->bind_param(
+    "idss",
+    $userId,
+    $totalAmount,
+    $paymentStatus,
+    $paymentMethod
+  );
+
   $orderStatement->execute();
+
+  $orderId = $conn->insert_id;
+
+  $orderStatement->close();
 
   $orderId = $conn->insert_id;
 

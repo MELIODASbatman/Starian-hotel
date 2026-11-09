@@ -2,6 +2,10 @@
 
 session_start();
 
+require_once __DIR__ . "/php/avatar_helpers.php";
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+$isLoggedIn = isset($_SESSION["user_id"]);
+
 require_once __DIR__ . "/php/db.php";
 
 if (!isset($_SESSION["user_id"])) {
@@ -54,7 +58,9 @@ $stmt = $conn->prepare("
     b.paid_at,
     r.room_name,
     r.room_code,
-    r.image AS room_image
+    r.image AS room_image,
+    r.wifi,
+    r.room_service
   FROM bookings AS b
   INNER JOIN rooms AS r ON b.room_id = r.id
   WHERE b.id IN ($placeholders)
@@ -126,10 +132,16 @@ foreach ($booking_ids as $bookingId) {
 
 $booking = $bookings[0];
 $all_bookings_confirmed = true;
+$has_pending_bookings = false;
+
 foreach ($bookings as $bookingRecord) {
+
   if ($bookingRecord["booking_status"] !== "confirmed") {
     $all_bookings_confirmed = false;
-    break;
+  }
+
+  if ($bookingRecord["booking_status"] === "pending") {
+    $has_pending_bookings = true;
   }
 }
 
@@ -187,8 +199,18 @@ function escapeHTML($value)
         <li><a href="menu.php">Menu</a></li>
         <li><a href="about.php">About</a></li>
         <li><a href="contact.php">Contact</a></li>
-        <li><a class="loginup" href="login.php">Login</a></li>
-        <li><a class="signup" href="signup.php">Sign Up</a></li>
+
+        <?php if ($isLoggedIn): ?>
+          <li>
+            <a href="dashboard.php" class="account-link">
+              <img src="img/avatars/<?php echo htmlspecialchars($avatarFilename, ENT_QUOTES, "UTF-8"); ?>" alt="" class="nav-avatar" />
+              <span><?php echo htmlspecialchars($_SESSION["fullname"] ?? "My Account"); ?></span>
+            </a>
+          </li>
+        <?php else: ?>
+          <li><a class="loginup" href="login.php">Login</a></li>
+          <li><a class="signup" href="signup.php">Sign Up</a></li>
+        <?php endif; ?>
       </ul>
     </nav>
   </section>
@@ -258,17 +280,19 @@ function escapeHTML($value)
             <div class="room-summary-details">
               <h4><?= escapeHTML($booking["room_name"]) ?></h4>
               <p>
-                <i class="fa-solid fa-bed" aria-hidden="true"></i> Room stay
+                <i class="fa-solid fa-bed" aria-hidden="true"></i>
+                Room stay
               </p>
               <?php if ((int)$booking["wifi"] === 1): ?>
                 <p>
-                  <i class="fa-solid fa-wifi"></i> Free Wi-Fi
+                  <i class="fa-solid fa-wifi" aria-hidden="true"></i>
+                  Free Wi-Fi
                 </p>
               <?php endif; ?>
 
               <?php if ((int)$booking["room_service"] === 1): ?>
                 <p>
-                  <i class="fa-solid fa-bell-concierge"></i>
+                  <i class="fa-solid fa-bell-concierge" aria-hidden="true"></i>
                   Room Service
                 </p>
               <?php endif; ?>

@@ -366,6 +366,13 @@ function escapeHTML($value)
           data-demo-message="Demo mode: no payment was made, no payment details were submitted, and your food order remains pending.">
           Pay KSh <?= $order_total_display ?>
         </button>
+        <div class="confirmation-actions">
+          <a
+            class="confirmation-secondary-action"
+            href="food_confirmation.php?order_id=<?= (int) $order["id"] ?>">
+            View Order Confirmation
+          </a>
+        </div>
         <p
           class="checkout-feedback"
           id="checkout-feedback"
