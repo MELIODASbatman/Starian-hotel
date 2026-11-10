@@ -9,6 +9,7 @@
   var orderStatus = document.getElementById("order-status");
   var clearOrderButton = document.getElementById("clear-order");
   var placeOrderButton = document.getElementById("place-order");
+  var paymentMethodSelect = document.getElementById("payment-method");
   var cartButton = document.getElementById("open-cart");
   var cartCount = document.getElementById("cart-count");
   var cartFeedback = document.getElementById("cart-feedback");
@@ -338,6 +339,13 @@
       orderStatus.textContent = "Your cart is empty.";
       return;
     }
+    var paymentMethod = paymentMethodSelect.value;
+
+    if (!paymentMethod) {
+      orderStatus.textContent = "Please select a payment method.";
+      paymentMethodSelect.focus();
+      return;
+    }
 
     placeOrderButton.disabled = true;
     placeOrderButton.textContent = "Placing order...";
@@ -352,6 +360,7 @@
         },
         body: JSON.stringify({
           items: items,
+          Payment_method: paymentMethod,
         }),
       });
 

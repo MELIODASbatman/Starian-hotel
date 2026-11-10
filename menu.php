@@ -236,6 +236,15 @@ if ($result) {
           Continue shopping
         </button>
       </div>
+      <div class="payment-method-field">
+        <label for="payment-method">Choose Payment Method</label>
+
+        <select id="payment-method" name="payment_method" required>
+          <option value="">Select payment method</option>
+          <option value="mpesa">Pay Online (M-Pesa)</option>
+          <option value="pay_at_hotel">Pay at Hotel</option>
+        </select>
+      </div>
       <button class="place-order-button" id="place-order" type="button" disabled>
         Place Order
       </button>

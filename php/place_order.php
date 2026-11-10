@@ -167,26 +167,30 @@ try {
     throw new Exception("The order total is invalid.");
   }
 
-  // 6. Save the main order
+
   // 6. Save the main order
   $userId = (int) $_SESSION["user_id"];
   $totalAmount = $totalAmount / 100;
+
+  $orderStatus = "pending";
 
   $orderStatement = $conn->prepare(
     "INSERT INTO food_orders
     (
         user_id,
         total_amount,
+        order_status,
         payment_status,
         payment_method
     )
-    VALUES (?, ?, ?, ?)"
+    VALUES (?, ?, ?, ?, ?)"
   );
 
   $orderStatement->bind_param(
-    "idss",
+    "idsss",
     $userId,
     $totalAmount,
+    $orderStatus,
     $paymentStatus,
     $paymentMethod
   );
@@ -197,9 +201,6 @@ try {
 
   $orderStatement->close();
 
-  $orderId = $conn->insert_id;
-
-  $orderStatement->close();
 
   // 7. Save each food item in the order
   $itemStatement = $conn->prepare(
