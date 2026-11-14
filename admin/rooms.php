@@ -4,6 +4,88 @@ require_once __DIR__ . "/../php/db.php";
 
 $adminName = $_SESSION["fullname"] ?? "Administrator";
 
+if (empty($_SESSION["room_csrf_token"])) {
+  $_SESSION["room_csrf_token"] = bin2hex(random_bytes(32));
+}
+
+$message = "";
+$messageType = "";
+
+if (($_GET["deleted"] ?? "") === "1") {
+  $message = "Room deleted successfully.";
+  $messageType = "success";
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $submittedToken = $_POST["csrf_token"] ?? "";
+  $roomId = filter_var($_POST["room_id"] ?? "", FILTER_VALIDATE_INT);
+
+  if (!hash_equals($_SESSION["room_csrf_token"], $submittedToken)) {
+    $message = "Invalid request. Please try again.";
+    $messageType = "error";
+  } elseif (($_POST["action"] ?? "") !== "delete" || !$roomId) {
+    $message = "Invalid room request.";
+    $messageType = "error";
+  } else {
+    $roomStmt = $conn->prepare("SELECT image FROM rooms WHERE id = ?");
+    if (!$roomStmt) {
+      die("Unable to prepare room lookup: " . $conn->error);
+    }
+
+    $roomStmt->bind_param("i", $roomId);
+    $roomStmt->execute();
+    $room = $roomStmt->get_result()->fetch_assoc();
+    $roomStmt->close();
+
+    if (!$room) {
+      $message = "Room not found.";
+      $messageType = "error";
+    } else {
+      $bookingStmt = $conn->prepare("SELECT COUNT(*) AS booking_count FROM bookings WHERE room_id = ?");
+      if (!$bookingStmt) {
+        die("Unable to prepare booking lookup: " . $conn->error);
+      }
+
+      $bookingStmt->bind_param("i", $roomId);
+      $bookingStmt->execute();
+      $bookingCount = (int) $bookingStmt->get_result()->fetch_assoc()["booking_count"];
+      $bookingStmt->close();
+
+      if ($bookingCount > 0) {
+        $message = "This room has booking records and cannot be deleted. You can mark it unavailable instead.";
+        $messageType = "error";
+      } else {
+        $deleteStmt = $conn->prepare("DELETE FROM rooms WHERE id = ?");
+        if (!$deleteStmt) {
+          die("Unable to prepare room deletion: " . $conn->error);
+        }
+
+        $deleteStmt->bind_param("i", $roomId);
+
+        if ($deleteStmt->execute() && $deleteStmt->affected_rows === 1) {
+          $imageFilename = basename(rawurldecode((string) ($room["image"] ?? "")));
+          if (
+            preg_match('/\A[a-f0-9]{32}\.(?:jpg|png|webp)\z/i', $imageFilename) &&
+            is_file(__DIR__ . "/../img/" . $imageFilename)
+          ) {
+            unlink(__DIR__ . "/../img/" . $imageFilename);
+          }
+
+          $deleteStmt->close();
+          header("Location: rooms.php?deleted=1");
+          exit;
+        }
+
+        $message = $deleteStmt->errno === 1451
+          ? "This room has booking records and cannot be deleted. You can mark it unavailable instead."
+          : "Unable to delete room. Please try again.";
+        $messageType = "error";
+        $deleteStmt->close();
+      }
+    }
+  }
+}
+
 // Fetch all rooms
 $sql = $conn->query("
     SELECT *
@@ -66,6 +148,11 @@ if ($sql) {
             Add New Room
           </a><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search rooms..."></label>
         </div>
+        <?php if ($message !== ""): ?>
+          <div class="room-form-alert <?= htmlspecialchars($messageType, ENT_QUOTES, "UTF-8") ?>" role="status">
+            <?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?>
+          </div>
+        <?php endif; ?>
         <nav class="filter-row" aria-label="Filter rooms"><a class="filter-pill active" href="#">All</a><a class="filter-pill" href="#">Standard</a><a class="filter-pill" href="#">Deluxe</a><a class="filter-pill" href="#">Executive</a><a class="filter-pill" href="#">Family</a></nav>
         <section class="panel">
           <div class="table-wrap">
@@ -143,19 +230,26 @@ if ($sql) {
                   <td>
                     <div class="actions">
 
-                      <button
+                      <a
+                        href="edit-room.php?id=<?= (int) $room["id"] ?>"
                         class="icon-button"
-                        aria-label="Edit room"
+                        aria-label="Edit <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>"
                         title="Edit room">
                         <i class="fa-solid fa-pen"></i>
-                      </button>
+                      </a>
 
-                      <button
-                        class="icon-button danger-action"
-                        aria-label="Delete room"
-                        title="Delete room">
-                        <i class="fa-regular fa-trash-can"></i>
-                      </button>
+                      <form method="POST" action="rooms.php" onsubmit="return confirm('Delete this room?');">
+                        <input type="hidden" name="room_id" value="<?= (int) $room["id"] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["room_csrf_token"], ENT_QUOTES, "UTF-8") ?>">
+                        <input type="hidden" name="action" value="delete">
+                        <button
+                          type="submit"
+                          class="icon-button danger-action"
+                          aria-label="Delete <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>"
+                          title="Delete room">
+                          <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                      </form>
 
                     </div>
                   </td>

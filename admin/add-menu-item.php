@@ -2,6 +2,7 @@
 require_once __DIR__ . "/includes/auth.php";
 require_once __DIR__ . "/../php/db.php";
 
+$categories = require __DIR__ . "/../php/menu_categories.php";
 $adminName = $_SESSION["fullname"] ?? "Administrator";
 
 $message = "";
@@ -23,6 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $foodName === "" ||
     $description === "" ||
     $category === "" ||
+    !in_array($category, $categories, true) ||
     !is_numeric($price) ||
     !is_finite((float) $price) ||
     (float) $price <= 0 ||
@@ -324,15 +326,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   Category *
                 </label>
 
-                <input
-                  type="text"
+                <select
                   id="category"
                   name="category"
-                  placeholder="Example: Main Course"
-                  value="<?= htmlspecialchars($_POST["category"] ?? "", ENT_QUOTES, "UTF-8") ?>"
                   required>
+                  <option value="" disabled
+                    <?= empty($_POST["category"]) ? "selected" : "" ?>>
+                    Select a category
+                  </option>
+                  <?php foreach ($categories as $option): ?>
+                    <option value="<?= htmlspecialchars($option, ENT_QUOTES, "UTF-8") ?>"
+                      <?= ($_POST["category"] ?? "Main Dishes") === $option ? "selected" : "" ?>>
+                      <?= htmlspecialchars($option, ENT_QUOTES, "UTF-8") ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
 
-                <small>Example: Main Course, Salad, Drinks or Desserts.</small>
+                <small>Choose the menu section where this item should appear.</small>
 
               </div>
 

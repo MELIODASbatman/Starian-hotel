@@ -7,12 +7,7 @@ $isLoggedIn = isset($_SESSION["user_id"]);
 
 require_once "php/db.php";
 
-$categories = [
-  "Main Dishes",
-  "Breakfast",
-  "Salads",
-  "Drinks"
-];
+$categories = require __DIR__ . "/php/menu_categories.php";
 
 $menuItems = [];
 
@@ -28,7 +23,24 @@ if (!$result) {
 
 if ($result) {
   while ($row = $result->fetch_assoc()) {
+    $itemCategory = trim((string) ($row["category"] ?? ""));
+    if (strcasecmp($itemCategory, "Main Dish") === 0) {
+      $itemCategory = "Main Dishes";
+      $row["category"] = $itemCategory;
+    }
+
     $menuItems[] = $row;
+    $hasCategory = false;
+    foreach ($categories as $category) {
+      if (strcasecmp(trim($category), $itemCategory) === 0) {
+        $hasCategory = true;
+        break;
+      }
+    }
+
+    if ($itemCategory !== "" && !$hasCategory) {
+      $categories[] = $itemCategory;
+    }
   }
 }
 ?>
@@ -110,20 +122,25 @@ if ($result) {
         aria-live="polite"
         hidden></p>
       <nav class="category-nav" aria-label="Menu categories">
-        <a href="#main-dishes">Main Dishes</a>
-        <a href="#breakfast">Breakfast</a>
-        <a href="#salads">Salads</a>
-        <a href="#drinks">Drinks</a>
+        <?php
+        $categoryIds = [
+          "Main Dishes" => "main-dishes",
+          "Breakfast" => "breakfast",
+          "Salads" => "salads",
+          "Drinks" => "drinks"
+        ];
+
+        foreach ($categories as $index => $category):
+          $categoryId = $categoryIds[$category] ?? "menu-category-" . $index;
+          $categoryIds[$category] = $categoryId;
+        ?>
+          <a href="#<?php echo htmlspecialchars($categoryId, ENT_QUOTES, "UTF-8"); ?>">
+            <?php echo htmlspecialchars($category, ENT_QUOTES, "UTF-8"); ?>
+          </a>
+        <?php endforeach; ?>
       </nav>
 
       <?php
-      $categoryIds = [
-        "Main Dishes" => "main-dishes",
-        "Breakfast" => "breakfast",
-        "Salads" => "salads",
-        "Drinks" => "drinks"
-      ];
-
       $categoryDescriptions = [
         "Main Dishes" => "FAVOURITES FROM THE KITCHEN",
         "Breakfast" => "A GREAT START TO YOUR DAY",
@@ -135,21 +152,24 @@ if ($result) {
         $categoryFoods = array_filter(
           $menuItems,
           function ($food) use ($category) {
-            return $food["category"] === $category;
+            return strcasecmp(
+              trim($food["category"]),
+              trim($category)
+            ) === 0;
           }
         );
       ?>
 
         <section
           class="food-category"
-          id="<?php echo htmlspecialchars($categoryIds[$category]); ?>">
+          id="<?php echo htmlspecialchars($categoryIds[$category], ENT_QUOTES, "UTF-8"); ?>">
           <div class="category-heading">
             <div>
               <p class="category-kicker">
-                <?php echo htmlspecialchars($categoryDescriptions[$category]); ?>
+                <?php echo htmlspecialchars($categoryDescriptions[$category] ?? "FROM OUR KITCHEN", ENT_QUOTES, "UTF-8"); ?>
               </p>
 
-              <h2><?php echo htmlspecialchars($category); ?></h2>
+              <h2><?php echo htmlspecialchars($category, ENT_QUOTES, "UTF-8"); ?></h2>
             </div>
 
             <span>
@@ -160,13 +180,15 @@ if ($result) {
 
           <div class="food-grid">
 
-            <?php foreach ($categoryFoods as $food): ?>
-
+            <?php foreach ($categoryFoods as $food):
+              $imageFilename = rawurldecode(basename((string) ($food["image"] ?? "")));
+              $imagePath = "img/" . rawurlencode($imageFilename);
+            ?>
               <article class="food-card">
 
                 <img
-                  src="<?php echo htmlspecialchars($food["image"]); ?>"
-                  alt="<?php echo htmlspecialchars($food["food_name"]); ?>"
+                  src="<?php echo htmlspecialchars($imagePath, ENT_QUOTES, "UTF-8"); ?>"
+                  alt="<?php echo htmlspecialchars($food["food_name"], ENT_QUOTES, "UTF-8"); ?>"
                   loading="lazy">
 
                 <div class="food-info">
