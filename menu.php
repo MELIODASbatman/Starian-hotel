@@ -22,6 +22,9 @@ $sql = "SELECT id, food_name, description, category, price, image
         ORDER BY id ASC";
 
 $result = $conn->query($sql);
+if (!$result) {
+  die("Menu query error: " . $conn->error);
+}
 
 if ($result) {
   while ($row = $result->fetch_assoc()) {
@@ -44,7 +47,7 @@ if ($result) {
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
   <link rel="stylesheet" href="css/signup.css?v=9" />
-  <link rel="stylesheet" href="css/menu.css?v=4" />
+  <link rel="stylesheet" href="css/menu.css?v=5" />
 </head>
 
 <body>
@@ -301,7 +304,7 @@ if ($result) {
     </div>
   </footer>
   <script src="javascript/navigation.js?v=1"></script>
-  <script src="javascript/menu.js?v=6"></script>
+  <script src="javascript/menu.js?v=7"></script>
 </body>
 
 </html>

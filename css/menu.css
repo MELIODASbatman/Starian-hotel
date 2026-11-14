@@ -305,6 +305,52 @@
   margin-top: 16px;
 }
 
+.payment-method-field {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.payment-method-field label {
+  color: #35516a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.payment-method-field select {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 42px 10px 13px;
+  border: 1px solid #ccd9e5;
+  border-radius: 8px;
+  appearance: none;
+  background-color: #f8fafc;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%2317324f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 6 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  color: #17324f;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.payment-method-field select:hover {
+  border-color: #9eb2c4;
+  background-color: #fff;
+}
+
+.payment-method-field select:focus-visible {
+  border-color: #b78300;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(255, 202, 40, 0.3);
+}
+
 .close-cart-action {
   padding: 8px 12px;
   border: 0;
@@ -484,7 +530,7 @@
 .place-order-button {
   display: block;
   width: 100%;
-  margin-top: 14px;
+  margin-top: 12px;
   padding: 12px 16px;
   border: none;
   border-radius: 6px;

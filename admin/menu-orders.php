@@ -1,5 +1,20 @@
 <?php
 require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/../php/db.php";
+
+// Get the logged-in admin's name
+$adminName = $_SESSION["fullname"] ?? "Administrator";
+
+// Fetch menu items from the database
+$menuItemsResult = $conn->query("
+    SELECT id, food_name, category, price, image, is_available
+    FROM food_menu
+    ORDER BY id DESC
+");
+
+if (!$menuItemsResult) {
+  die("Error fetching menu items: " . $conn->error);
+}
 ?>
 
 <!doctype html>
@@ -34,7 +49,8 @@ require_once __DIR__ . "/includes/auth.php";
     </aside>
     <div class="workspace">
       <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><a class="topbar-icon" href="#" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="notification-dot">3</span></a>
-        <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div><form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
+        <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
+        <form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
       </header>
       <main class="page-content">
         <div class="page-heading">
@@ -42,7 +58,12 @@ require_once __DIR__ . "/includes/auth.php";
             <h1>Food Menu &amp; Orders</h1>
             <p>Manage menu items and customer orders.</p>
           </div>
-          <div class="heading-actions"><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search menu items..."></label><a class="button-primary" href="#"><i class="fa-solid fa-plus"></i>Add Menu Item</a></div>
+          <div class="heading-actions"><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search menu items..."></label>
+            <a href="add-menu-item.php" class="button-primary">
+              <i class="fas fa-plus"></i>
+              Add Menu Item
+            </a>
+          </div>
         </div>
         <div class="menu-layout">
           <section class="panel">
@@ -60,56 +81,50 @@ require_once __DIR__ . "/includes/auth.php";
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td><img class="food-thumbnail" src="../img/grilled%20chicken.jpg" alt="Grilled chicken"></td>
-                    <td><strong>Grilled Chicken</strong></td>
-                    <td>Main Course</td>
-                    <td>450</td>
-                    <td><span class="badge">Available</span></td>
-                    <td>
-                      <div class="actions"><button class="icon-button" aria-label="Edit grilled chicken"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete grilled chicken"><i class="fa-regular fa-trash-can"></i></button></div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><img class="food-thumbnail" src="../img/burger.jpg" alt="Beef burger"></td>
-                    <td><strong>Beef Burger</strong></td>
-                    <td>Main Course</td>
-                    <td>400</td>
-                    <td><span class="badge">Available</span></td>
-                    <td>
-                      <div class="actions"><button class="icon-button" aria-label="Edit beef burger"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete beef burger"><i class="fa-regular fa-trash-can"></i></button></div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><img class="food-thumbnail" src="../img/pasta.jpg" alt="Vegetable pasta"></td>
-                    <td><strong>Vegetable Pasta</strong></td>
-                    <td>Main Course</td>
-                    <td>350</td>
-                    <td><span class="badge">Available</span></td>
-                    <td>
-                      <div class="actions"><button class="icon-button" aria-label="Edit vegetable pasta"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete vegetable pasta"><i class="fa-regular fa-trash-can"></i></button></div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><img class="food-thumbnail" src="../img/fish.jpg" alt="Fish and chips"></td>
-                    <td><strong>Fish and Chips</strong></td>
-                    <td>Main Course</td>
-                    <td>400</td>
-                    <td><span class="badge">Available</span></td>
-                    <td>
-                      <div class="actions"><button class="icon-button" aria-label="Edit fish and chips"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete fish and chips"><i class="fa-regular fa-trash-can"></i></button></div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><img class="food-thumbnail" src="../img/chicken%20Caesar%20salad.jpg" alt="Chicken Caesar salad"></td>
-                    <td><strong>Chicken Caesar Salad</strong></td>
-                    <td>Salad</td>
-                    <td>300</td>
-                    <td><span class="badge">Available</span></td>
-                    <td>
-                      <div class="actions"><button class="icon-button" aria-label="Edit chicken Caesar salad"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete chicken Caesar salad"><i class="fa-regular fa-trash-can"></i></button></div>
-                    </td>
-                  </tr>
+                  <?php while ($item = $menuItemsResult->fetch_assoc()): ?>
+
+                    <tr>
+                      <td>
+                        <div class="food-item-cell">
+                          <img
+                            src="../img/<?php echo htmlspecialchars(basename($item['image'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                            alt="<?php echo htmlspecialchars($item['food_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                            class="food-thumbnail">
+
+                          <span>
+                            <?php echo htmlspecialchars($item['food_name'], ENT_QUOTES, 'UTF-8'); ?>
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <?php echo htmlspecialchars($item['category'], ENT_QUOTES, 'UTF-8'); ?>
+                      </td>
+
+                      <td>
+                        KSh <?php echo number_format((float) $item['price'], 2); ?>
+                      </td>
+
+                      <td>
+                        <?php if ((int) $item['is_available'] === 1): ?>
+                          <span class="badge">Available</span>
+                        <?php else: ?>
+                          <span class="badge">Unavailable</span>
+                        <?php endif; ?>
+                      </td>
+
+                      <td class="actions">
+                        <button type="button" class="icon-button" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </button>
+
+                        <button type="button" class="icon-button danger-action" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+
+                  <?php endwhile; ?>
                 </tbody>
               </table>
             </div>

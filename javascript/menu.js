@@ -339,6 +339,7 @@
       orderStatus.textContent = "Your cart is empty.";
       return;
     }
+
     var paymentMethod = paymentMethodSelect.value;
 
     if (!paymentMethod) {
@@ -360,7 +361,7 @@
         },
         body: JSON.stringify({
           items: items,
-          Payment_method: paymentMethod,
+          payment_method: paymentMethod,
         }),
       });
 
@@ -379,8 +380,12 @@
 
       saveOrder();
 
+      var nextPage =
+        paymentMethod === "pay_at_hotel"
+          ? "food_confirmation.php?order_id="
+          : "foodcheckout.php?order_id=";
       window.location.assign(
-        "foodcheckout.php?order_id=" + encodeURIComponent(result.order_id),
+        nextPage + encodeURIComponent(result.order_id),
       );
       return;
     } catch (error) {

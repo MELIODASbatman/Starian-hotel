@@ -27,6 +27,8 @@ $statement = $conn->prepare(
       food_orders.created_at,
       food_orders.total_amount,
       food_orders.order_status,
+      food_orders.payment_method,
+      food_orders.payment_status,
       food_order_items.id AS item_id,
       food_order_items.quantity,
       food_order_items.price AS unit_price,
@@ -68,7 +70,9 @@ while ($row = $result->fetch_assoc()) {
       "id" => (int) $row["order_id"],
       "created_at" => $row["created_at"],
       "total_amount" => (float) $row["total_amount"],
-      "status" => strtolower((string) $row["order_status"])
+      "status" => strtolower((string) $row["order_status"]),
+      "payment_method" => (string) $row["payment_method"],
+      "payment_status" => strtolower((string) $row["payment_status"])
     ];
   }
 
@@ -298,7 +302,15 @@ function escapeHTML($value)
           </p>
           <p>
             <span>Payment status</span>
-            <strong>Not processed</strong>
+            <strong><?= $order["payment_method"] === "pay_at_hotel"
+              ? "Due at hotel"
+              : escapeHTML(ucfirst($order["payment_status"])) ?></strong>
+          </p>
+          <p>
+            <span>Payment method</span>
+            <strong><?= $order["payment_method"] === "pay_at_hotel"
+              ? "Pay at Hotel"
+              : escapeHTML(ucfirst($order["payment_method"])) ?></strong>
           </p>
         </div>
 
