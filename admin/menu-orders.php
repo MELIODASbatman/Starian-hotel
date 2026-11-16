@@ -114,9 +114,12 @@ if (!$menuItemsResult) {
                       </td>
 
                       <td class="actions">
-                        <button type="button" class="icon-button" title="Edit">
+                        <a class="icon-button"
+                          href="edit-menu-item.php?id=<?php echo (int) $item['id']; ?>"
+                          title="Edit"
+                          aria-label="Edit <?php echo htmlspecialchars($item['food_name'], ENT_QUOTES, 'UTF-8'); ?>">
                           <i class="fas fa-edit"></i>
-                        </button>
+                        </a>
 
                         <button type="button" class="icon-button danger-action" title="Delete">
                           <i class="fas fa-trash"></i>
