@@ -111,7 +111,8 @@ if ($sql) {
   <meta name="description" content="Manage Starian Hotel rooms">
   <title>Manage Rooms | Starian Hotel Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css?v=20261031-rooms">
+  <link rel="stylesheet" href="admin.css?v=20261118-room-filter">
+  <script src="../javascript/admin-search.js?v=20261118-room-filter" defer></script>
 </head>
 
 <body>
@@ -146,127 +147,137 @@ if ($sql) {
           <a class="button-primary" href="add-room.php">
             <i class="fa-solid fa-plus"></i>
             Add New Room
-          </a><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search rooms..."></label>
+          </a>
+          <form class="search-box" role="search" data-table-search="rooms-table">
+            <button type="submit" aria-label="Search rooms"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+            <input type="search" name="search" placeholder="Search rooms..." aria-label="Search rooms">
+          </form>
         </div>
         <?php if ($message !== ""): ?>
           <div class="room-form-alert <?= htmlspecialchars($messageType, ENT_QUOTES, "UTF-8") ?>" role="status">
             <?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?>
           </div>
         <?php endif; ?>
-        <nav class="filter-row" aria-label="Filter rooms"><a class="filter-pill active" href="#">All</a><a class="filter-pill" href="#">Standard</a><a class="filter-pill" href="#">Deluxe</a><a class="filter-pill" href="#">Executive</a><a class="filter-pill" href="#">Family</a></nav>
+        <nav class="filter-row" aria-label="Filter rooms" data-category-filter-list="rooms-table">
+          <button type="button" class="filter-pill active" data-category-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="filter-pill" data-category-filter="standard" aria-pressed="false">Standard</button>
+          <button type="button" class="filter-pill" data-category-filter="deluxe" aria-pressed="false">Deluxe</button>
+          <button type="button" class="filter-pill" data-category-filter="executive" aria-pressed="false">Executive</button>
+          <button type="button" class="filter-pill" data-category-filter="family" aria-pressed="false">Family</button>
+        </nav>
         <section class="panel">
           <div class="table-wrap">
-            <table class="data-table">
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Room Name</th>
-              <th>Type</th>
-              <th>Price (KSh)</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-
-            <?php if (!empty($rooms)): ?>
-
-              <?php foreach ($rooms as $room): ?>
-
-                <?php
-                $imageFilename = basename(rawurldecode((string)($room["image"] ?? "")));
-                $roomImageUrl = "";
-
-                if ($imageFilename !== "") {
-                  if (is_file(__DIR__ . "/../img/rooms/" . $imageFilename)) {
-                    $roomImageUrl = "../img/rooms/" . rawurlencode($imageFilename);
-                  } elseif (is_file(__DIR__ . "/../img/" . $imageFilename)) {
-                    $roomImageUrl = "../img/" . rawurlencode($imageFilename);
-                  }
-                }
-                ?>
-
+            <table class="data-table" id="rooms-table">
+              <thead>
                 <tr>
-
-                  <!-- Room Image -->
-                  <td>
-                    <?php if ($roomImageUrl !== ""): ?>
-                      <img
-                        class="room-thumbnail"
-                        src="<?= htmlspecialchars($roomImageUrl, ENT_QUOTES, "UTF-8") ?>"
-                        alt="<?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>">
-                    <?php else: ?>
-                      <span class="room-thumbnail-placeholder" role="img" aria-label="No image available for <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>">
-                        <i class="fa-solid fa-bed" aria-hidden="true"></i>
-                      </span>
-                    <?php endif; ?>
-                  </td>
-
-                  <!-- Room Name -->
-                  <td>
-                    <strong>
-                      <?= htmlspecialchars($room["room_name"]) ?>
-                    </strong>
-                  </td>
-
-                  <!-- Room Code -->
-                  <td>
-                    <?= htmlspecialchars($room["room_code"]) ?>
-                  </td>
-
-                  <!-- Room Price -->
-                  <td>
-                    <?= number_format((float)$room["price_per_night"], 2) ?>
-                  </td>
-
-                  <!-- Room Status -->
-                  <td>
-                    <span class="badge">
-                      <?= htmlspecialchars(ucfirst($room["status"])) ?>
-                    </span>
-                  </td>
-
-                  <!-- Actions -->
-                  <td>
-                    <div class="actions">
-
-                      <a
-                        href="edit-room.php?id=<?= (int) $room["id"] ?>"
-                        class="icon-button"
-                        aria-label="Edit <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>"
-                        title="Edit room">
-                        <i class="fa-solid fa-pen"></i>
-                      </a>
-
-                      <form method="POST" action="rooms.php" onsubmit="return confirm('Delete this room?');">
-                        <input type="hidden" name="room_id" value="<?= (int) $room["id"] ?>">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["room_csrf_token"], ENT_QUOTES, "UTF-8") ?>">
-                        <input type="hidden" name="action" value="delete">
-                        <button
-                          type="submit"
-                          class="icon-button danger-action"
-                          aria-label="Delete <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>"
-                          title="Delete room">
-                          <i class="fa-regular fa-trash-can"></i>
-                        </button>
-                      </form>
-
-                    </div>
-                  </td>
-
+                  <th>Image</th>
+                  <th>Room Name</th>
+                  <th>Type</th>
+                  <th>Price (KSh)</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
+              </thead>
+              <tbody>
 
-              <?php endforeach; ?>
+                <?php if (!empty($rooms)): ?>
 
-            <?php else: ?>
+                  <?php foreach ($rooms as $room): ?>
 
-              <tr>
-                <td colspan="6">No rooms found.</td>
-              </tr>
+                    <?php
+                    $imageFilename = basename(rawurldecode((string)($room["image"] ?? "")));
+                    $roomImageUrl = "";
 
-            <?php endif; ?>
+                    if ($imageFilename !== "") {
+                      if (is_file(__DIR__ . "/../img/rooms/" . $imageFilename)) {
+                        $roomImageUrl = "../img/rooms/" . rawurlencode($imageFilename);
+                      } elseif (is_file(__DIR__ . "/../img/" . $imageFilename)) {
+                        $roomImageUrl = "../img/" . rawurlencode($imageFilename);
+                      }
+                    }
+                    ?>
 
-          </tbody>
+                    <tr data-search-row data-category="<?= htmlspecialchars(strtolower((string) ($room["category"] ?? "")), ENT_QUOTES, "UTF-8") ?>">
+
+                      <!-- Room Image -->
+                      <td>
+                        <?php if ($roomImageUrl !== ""): ?>
+                          <img
+                            class="room-thumbnail"
+                            src="<?= htmlspecialchars($roomImageUrl, ENT_QUOTES, "UTF-8") ?>"
+                            alt="<?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>">
+                        <?php else: ?>
+                          <span class="room-thumbnail-placeholder" role="img" aria-label="No image available for <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>">
+                            <i class="fa-solid fa-bed" aria-hidden="true"></i>
+                          </span>
+                        <?php endif; ?>
+                      </td>
+
+                      <!-- Room Name -->
+                      <td>
+                        <strong>
+                          <?= htmlspecialchars($room["room_name"]) ?>
+                        </strong>
+                      </td>
+
+                      <!-- Room Code -->
+                      <td>
+                        <?= htmlspecialchars($room["room_code"]) ?>
+                      </td>
+
+                      <!-- Room Price -->
+                      <td>
+                        <?= number_format((float)$room["price_per_night"], 2) ?>
+                      </td>
+
+                      <!-- Room Status -->
+                      <td>
+                        <span class="badge">
+                          <?= htmlspecialchars(ucfirst($room["status"])) ?>
+                        </span>
+                      </td>
+
+                      <!-- Actions -->
+                      <td>
+                        <div class="actions">
+
+                          <a
+                            href="edit-room.php?id=<?= (int) $room["id"] ?>"
+                            class="icon-button"
+                            aria-label="Edit <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>"
+                            title="Edit room">
+                            <i class="fa-solid fa-pen"></i>
+                          </a>
+
+                          <form method="POST" action="rooms.php" onsubmit="return confirm('Delete this room?');">
+                            <input type="hidden" name="room_id" value="<?= (int) $room["id"] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION["room_csrf_token"], ENT_QUOTES, "UTF-8") ?>">
+                            <input type="hidden" name="action" value="delete">
+                            <button
+                              type="submit"
+                              class="icon-button danger-action"
+                              aria-label="Delete <?= htmlspecialchars($room["room_name"], ENT_QUOTES, "UTF-8") ?>"
+                              title="Delete room">
+                              <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                          </form>
+
+                        </div>
+                      </td>
+
+                    </tr>
+
+                  <?php endforeach; ?>
+
+                <?php else: ?>
+
+                  <tr>
+                    <td colspan="6">No rooms found.</td>
+                  </tr>
+
+                <?php endif; ?>
+
+              </tbody>
             </table>
           </div>
         </section>

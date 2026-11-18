@@ -54,8 +54,14 @@ a {
   flex-direction: column;
   overflow: auto;
   background:
-    linear-gradient(180deg, rgba(5, 48, 79, 0.98) 0%, rgba(5, 48, 79, 0.98) 68%, rgba(5, 48, 79, 0.35) 100%),
-    url("../img/Starian Hotel at Golden Dusk.png") center bottom / auto 39% no-repeat,
+    linear-gradient(
+      180deg,
+      rgba(5, 48, 79, 0.98) 0%,
+      rgba(5, 48, 79, 0.98) 68%,
+      rgba(5, 48, 79, 0.35) 100%
+    ),
+    url("../img/Starian Hotel at Golden Dusk.png") center bottom / auto 39%
+      no-repeat,
     var(--navy-deep);
   color: #fff;
 }
@@ -137,7 +143,9 @@ a {
   color: #e4f2fc;
   font-size: 12px;
   font-weight: 600;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .side-nav a i {
@@ -388,7 +396,12 @@ a {
   font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .booking-filters .booking-filter-submit {
@@ -459,6 +472,23 @@ a {
   outline: 0;
   color: var(--text);
   font-size: 10px;
+}
+
+.search-box button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.search-box button:focus-visible {
+  outline: 2px solid #1687e8;
+  outline-offset: 2px;
 }
 
 .button-secondary {
@@ -817,6 +847,13 @@ a {
   color: #527a9c;
   font-size: 10px;
   font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.filter-pill:focus-visible {
+  outline: 2px solid #1687e8;
+  outline-offset: 2px;
 }
 
 .filter-pill.active {
@@ -977,7 +1014,9 @@ a {
   font: inherit;
   font-size: 11px;
   box-shadow: inset 0 1px 2px rgba(8, 50, 82, 0.02);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .form-group > input,
@@ -1015,7 +1054,10 @@ a {
     calc(100% - 18px) calc(50% - 2px),
     calc(100% - 13px) calc(50% - 2px),
     0 0;
-  background-size: 5px 5px, 5px 5px, 100% 100%;
+  background-size:
+    5px 5px,
+    5px 5px,
+    100% 100%;
   background-repeat: no-repeat;
   padding-right: 36px;
 }
@@ -1428,7 +1470,11 @@ a {
   gap: 7px;
   padding: 12px 4px 22px;
   border-bottom: 1px solid #dceaf5;
-  background: repeating-linear-gradient(to bottom, transparent 0 39px, #eef4f9 40px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 39px,
+    #eef4f9 40px
+  );
 }
 
 .bar-group {
@@ -1535,7 +1581,10 @@ a {
   color: #527998;
   font-size: 10px;
   font-weight: 700;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .booking-pagination a:hover {
@@ -1664,6 +1713,83 @@ a {
   clip: rect(0, 0, 0, 0);
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* Food Order Search and Filters */
+.order-filter-form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.order-filter-form .room-form-field {
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0;
+  gap: 0;
+}
+
+.order-filter-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.order-filter-form .room-form-field > input,
+.order-filter-form .room-form-field > select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+  background: #ffffff;
+}
+
+.order-filter-form .room-form-field > input:focus,
+.order-filter-form .room-form-field > select:focus {
+  border-color: #f59e0b;
+}
+
+.order-filter-form .button-primary,
+.order-filter-form .button-secondary {
+  padding: 11px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.order-filter-form .button-secondary {
+  display: inline-block;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.order-filter-form .button-secondary:hover {
+  background: #d1d5db;
+}
+
+@media (max-width: 768px) {
+  .order-filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .order-filter-form .room-form-field {
+    width: 100%;
+  }
+
+  .order-filter-form .button-primary,
+  .order-filter-form .button-secondary {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 @media (max-width: 1100px) {

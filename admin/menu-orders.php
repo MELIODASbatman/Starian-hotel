@@ -4,6 +4,45 @@ require_once __DIR__ . "/../php/db.php";
 
 // Get the logged-in admin's name
 $adminName = $_SESSION["fullname"] ?? "Administrator";
+$menuCategories = require __DIR__ . "/../php/menu_categories.php";
+
+// Generate a CSRF token for menu deletion
+if (empty($_SESSION["menu_delete_csrf_token"])) {
+  $_SESSION["menu_delete_csrf_token"] = bin2hex(random_bytes(32));
+}
+
+// Display menu deletion feedback
+$deleteMessage = "";
+$deleteMessageType = "";
+
+$deleteStatus = $_GET["delete_status"] ?? "";
+
+switch ($deleteStatus) {
+  case "deleted":
+    $deleteMessage = "Menu item deleted successfully.";
+    $deleteMessageType = "success";
+    break;
+
+  case "unavailable":
+    $deleteMessage = "This item has previous orders, so it was marked unavailable instead.";
+    $deleteMessageType = "success";
+    break;
+
+  case "not_found":
+    $deleteMessage = "The selected menu item was not found.";
+    $deleteMessageType = "error";
+    break;
+
+  case "invalid":
+    $deleteMessage = "Invalid menu item selection.";
+    $deleteMessageType = "error";
+    break;
+
+  case "error":
+    $deleteMessage = "Something went wrong. The menu item could not be deleted.";
+    $deleteMessageType = "error";
+    break;
+}
 
 // Fetch menu items from the database
 $menuItemsResult = $conn->query("
@@ -14,6 +53,36 @@ $menuItemsResult = $conn->query("
 
 if (!$menuItemsResult) {
   die("Error fetching menu items: " . $conn->error);
+}
+
+// Fetch the five most recent food orders
+$recentOrdersResult = $conn->query("
+    SELECT
+        fo.id,
+        fo.total_amount,
+        fo.order_status,
+        fo.payment_status,
+        fo.created_at,
+        u.fullname,
+        COALESCE(SUM(foi.quantity), 0) AS total_items
+    FROM food_orders fo
+    LEFT JOIN users u
+        ON fo.user_id = u.id
+    LEFT JOIN food_order_items foi
+        ON fo.id = foi.order_id
+    GROUP BY
+        fo.id,
+        fo.total_amount,
+        fo.order_status,
+        fo.payment_status,
+        fo.created_at,
+        u.fullname
+    ORDER BY fo.created_at DESC, fo.id DESC
+    LIMIT 5
+");
+
+if (!$recentOrdersResult) {
+  die("Error fetching recent orders: " . $conn->error);
 }
 ?>
 
@@ -26,7 +95,8 @@ if (!$menuItemsResult) {
   <meta name="description" content="Manage the hotel menu and food orders">
   <title>Menu &amp; Orders | Starian Hotel Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=20261118-menu-category-filter">
+  <script src="../javascript/admin-search.js?v=20261118-menu-category-filter" defer></script>
 </head>
 
 <body>
@@ -58,18 +128,38 @@ if (!$menuItemsResult) {
             <h1>Food Menu &amp; Orders</h1>
             <p>Manage menu items and customer orders.</p>
           </div>
-          <div class="heading-actions"><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search menu items..."></label>
+          <div class="heading-actions">
+            <form class="search-box" role="search" data-table-search="menu-items-table">
+              <button type="submit" aria-label="Search menu items"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>
+              <input type="search" name="search" placeholder="Search menu items..." aria-label="Search menu items">
+            </form>
             <a href="add-menu-item.php" class="button-primary">
               <i class="fas fa-plus"></i>
               Add Menu Item
             </a>
           </div>
         </div>
+
+        <?php if ($deleteMessage !== ""): ?>
+          <div class="form-message <?php echo htmlspecialchars($deleteMessageType, ENT_QUOTES, 'UTF-8'); ?>">
+            <?php echo htmlspecialchars($deleteMessage, ENT_QUOTES, 'UTF-8'); ?>
+          </div>
+        <?php endif; ?>
+
+        <nav class="filter-row" aria-label="Filter menu items" data-category-filter-list="menu-items-table">
+          <button type="button" class="filter-pill active" data-category-filter="all" aria-pressed="true">All</button>
+          <?php foreach ($menuCategories as $category): ?>
+            <button type="button" class="filter-pill" data-category-filter="<?= htmlspecialchars(strtolower($category), ENT_QUOTES, "UTF-8") ?>" aria-pressed="false">
+              <?= htmlspecialchars($category, ENT_QUOTES, "UTF-8") ?>
+            </button>
+          <?php endforeach; ?>
+        </nav>
+
         <div class="menu-layout">
           <section class="panel">
-            <nav class="tab-row" aria-label="Menu sections"><a class="tab active" href="#menu-items">Menu Items</a><a class="tab" href="#orders">Orders</a></nav>
+            <nav class="tab-row" aria-label="Menu sections"><a class="tab active" href="#menu-items">Menu Items</a></nav>
             <div class="table-wrap" id="menu-items">
-              <table class="data-table">
+              <table class="data-table" id="menu-items-table">
                 <thead>
                   <tr>
                     <th>Image</th>
@@ -83,7 +173,7 @@ if (!$menuItemsResult) {
                 <tbody>
                   <?php while ($item = $menuItemsResult->fetch_assoc()): ?>
 
-                    <tr>
+                    <tr data-search-row data-category="<?= htmlspecialchars(strtolower((string) $item["category"]), ENT_QUOTES, "UTF-8") ?>">
                       <td>
                         <div class="food-item-cell">
                           <img
@@ -121,9 +211,33 @@ if (!$menuItemsResult) {
                           <i class="fas fa-edit"></i>
                         </a>
 
-                        <button type="button" class="icon-button danger-action" title="Delete">
-                          <i class="fas fa-trash"></i>
-                        </button>
+                        <form
+                          method="POST"
+                          action="delete-menu-item.php"
+                          onsubmit="return confirm('Are you sure you want to delete this menu item?');"
+                          style="display: inline;">
+                          <input
+                            type="hidden"
+                            name="id"
+                            value="<?php echo (int) $item['id']; ?>">
+
+                          <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?php echo htmlspecialchars(
+                                      $_SESSION['menu_delete_csrf_token'],
+                                      ENT_QUOTES,
+                                      'UTF-8'
+                                    ); ?>">
+
+                          <button
+                            type="submit"
+                            class="icon-button danger-action"
+                            title="Delete"
+                            aria-label="Delete <?php echo htmlspecialchars($item['food_name'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
                       </td>
                     </tr>
 
@@ -134,15 +248,72 @@ if (!$menuItemsResult) {
           </section>
           <section class="panel" id="orders">
             <div class="panel-heading">
-              <h2>Recent Orders</h2><a href="#">View all <i class="fa-solid fa-chevron-right"></i></a>
+              <h2>Recent Orders</h2><a href="orders.php">View all <i class="fa-solid fa-chevron-right"></i></a>
             </div>
+
             <div class="mini-orders">
-              <div class="mini-order"><strong><i class="fa-solid fa-user"></i> Mary Atieno</strong><span>2 items</span><strong>KSh 1,200</strong><span class="badge warning">Preparing</span></div>
-              <div class="mini-order"><strong><i class="fa-solid fa-user"></i> Peter Njuguna</strong><span>3 items</span><strong>KSh 1,560</strong><span class="badge warning">Preparing</span></div>
-              <div class="mini-order"><strong><i class="fa-solid fa-user"></i> Faith Wanjiku</strong><span>1 item</span><strong>KSh 850</strong><span class="badge">Delivered</span></div>
-              <div class="mini-order"><strong><i class="fa-solid fa-user"></i> Samuel Kamau</strong><span>2 items</span><strong>KSh 1,950</strong><span class="badge">Delivered</span></div>
-              <div class="mini-order"><strong><i class="fa-solid fa-user"></i> Esther Achieng</strong><span>1 item</span><strong>KSh 450</strong><span class="badge">Delivered</span></div>
+
+              <?php if ($recentOrdersResult->num_rows > 0): ?>
+
+                <?php while ($order = $recentOrdersResult->fetch_assoc()): ?>
+
+                  <div class="mini-order">
+
+                    <strong>
+                      <i class="fa-solid fa-user"></i>
+                      <?php
+                      echo htmlspecialchars(
+                        $order["fullname"] ?? "Unknown Customer",
+                        ENT_QUOTES,
+                        "UTF-8"
+                      );
+                      ?>
+                    </strong>
+
+                    <span>
+                      <?php
+                      $itemCount = (int) $order["total_items"];
+                      echo $itemCount . ($itemCount === 1 ? " item" : " items");
+                      ?>
+                    </span>
+
+                    <strong>
+                      KSh <?php echo number_format((float) $order["total_amount"], 2); ?>
+                    </strong>
+
+                    <span class="badge">
+                      <?php
+                      echo htmlspecialchars(
+                        ucfirst(str_replace("_", " ", $order["order_status"])),
+                        ENT_QUOTES,
+                        "UTF-8"
+                      );
+                      ?>
+                    </span>
+
+                    <small>
+                      Payment:
+                      <?php
+                      echo htmlspecialchars(
+                        ucfirst(str_replace("_", " ", $order["payment_status"])),
+                        ENT_QUOTES,
+                        "UTF-8"
+                      );
+                      ?>
+                    </small>
+
+                  </div>
+
+                <?php endwhile; ?>
+
+              <?php else: ?>
+
+                <p>No food orders have been placed yet.</p>
+
+              <?php endif; ?>
+
             </div>
+
           </section>
         </div>
       </main>

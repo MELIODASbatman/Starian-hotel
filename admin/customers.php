@@ -1,5 +1,45 @@
 <?php
 require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/../php/db.php";
+
+$adminName = $_SESSION["fullname"] ?? "Administrator";
+
+// Customer search
+$search = trim($_GET["search"] ?? "");
+
+// Fetch registered customers
+$sql = "
+    SELECT id, fullname, email, phone, avatar, created_at
+    FROM users
+    WHERE role = 'customer'
+";
+
+if ($search !== "") {
+  $sql .= "
+        AND (
+            fullname LIKE ?
+            OR email LIKE ?
+            OR phone LIKE ?
+        )
+    ";
+}
+
+$sql .= " ORDER BY created_at DESC, id DESC";
+
+$stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+  die("Error preparing customer query: " . $conn->error);
+}
+
+if ($search !== "") {
+  $searchTerm = "%" . $search . "%";
+  $stmt->bind_param("sss", $searchTerm, $searchTerm, $searchTerm);
+}
+
+$stmt->execute();
+$customersResult = $stmt->get_result();
+$stmt->close();
 ?>
 
 <!doctype html>
@@ -27,7 +67,8 @@ require_once __DIR__ . "/includes/auth.php";
     </aside>
     <div class="workspace">
       <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><a class="topbar-icon" href="#" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="notification-dot">3</span></a>
-        <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div><form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
+        <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
+        <form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
       </header>
       <main class="page-content">
         <div class="page-heading">
@@ -35,7 +76,18 @@ require_once __DIR__ . "/includes/auth.php";
             <h1>Manage Customers</h1>
             <p>View and manage all registered customers.</p>
           </div>
-          <div class="heading-actions"><label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search customers..."></label><a class="button-primary" href="#"><i class="fa-solid fa-plus"></i>Add Customer</a></div>
+          <div class="heading-actions">
+            <form class="search-box" method="GET" action="customers.php">
+              <i class="fa-solid fa-magnifying-glass"></i>
+
+              <input
+                type="search"
+                name="search"
+                placeholder="Search customers..."
+                value="<?php echo htmlspecialchars($search, ENT_QUOTES, "UTF-8"); ?>">
+            </form>
+            <a class="button-primary" href="#"><i class="fa-solid fa-plus"></i>Add Customer</a>
+          </div>
         </div>
         <section class="panel">
           <div class="table-wrap">
@@ -52,61 +104,81 @@ require_once __DIR__ . "/includes/auth.php";
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user"></i></span></td>
-                  <td><strong>Mary Atieno</strong></td>
-                  <td>mary@example.com</td>
-                  <td>+254 712 345 678</td>
-                  <td>16 Oct 2025</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="View Mary Atieno"><i class="fa-regular fa-eye"></i></button><button class="icon-button" aria-label="Edit Mary Atieno"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete Mary Atieno"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user"></i></span></td>
-                  <td><strong>Peter Njuguna</strong></td>
-                  <td>peter@example.com</td>
-                  <td>+254 743 654 321</td>
-                  <td>12 Oct 2025</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="View Peter Njuguna"><i class="fa-regular fa-eye"></i></button><button class="icon-button" aria-label="Edit Peter Njuguna"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete Peter Njuguna"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user"></i></span></td>
-                  <td><strong>Faith Wanjiku</strong></td>
-                  <td>faith@example.com</td>
-                  <td>+254 723 456 789</td>
-                  <td>08 Oct 2025</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="View Faith Wanjiku"><i class="fa-regular fa-eye"></i></button><button class="icon-button" aria-label="Edit Faith Wanjiku"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete Faith Wanjiku"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user"></i></span></td>
-                  <td><strong>Samuel Kamau</strong></td>
-                  <td>samuel@example.com</td>
-                  <td>+254 718 987 654</td>
-                  <td>05 Oct 2025</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="View Samuel Kamau"><i class="fa-regular fa-eye"></i></button><button class="icon-button" aria-label="Edit Samuel Kamau"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete Samuel Kamau"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user"></i></span></td>
-                  <td><strong>Esther Achieng</strong></td>
-                  <td>esther@example.com</td>
-                  <td>+254 709 111 222</td>
-                  <td>03 Oct 2025</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="View Esther Achieng"><i class="fa-regular fa-eye"></i></button><button class="icon-button" aria-label="Edit Esther Achieng"><i class="fa-solid fa-pen"></i></button><button class="icon-button danger-action" aria-label="Delete Esther Achieng"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
+                <?php if ($customersResult->num_rows > 0): ?>
+
+                  <?php while ($customer = $customersResult->fetch_assoc()): ?>
+
+                    <tr>
+                      <td>
+                        <span class="person-avatar">
+                          <?php if (!empty($customer["avatar"])): ?>
+                            <img
+                              src="../img/avatars/<?php echo htmlspecialchars(basename($customer["avatar"]), ENT_QUOTES, "UTF-8"); ?>"
+                              alt="Customer photo">
+                          <?php else: ?>
+                            <i class="fa-solid fa-user"></i>
+                          <?php endif; ?>
+                        </span>
+                      </td>
+
+                      <td>
+                        <strong>
+                          <?php echo htmlspecialchars($customer["fullname"], ENT_QUOTES, "UTF-8"); ?>
+                        </strong>
+                      </td>
+
+                      <td>
+                        <?php echo htmlspecialchars($customer["email"], ENT_QUOTES, "UTF-8"); ?>
+                      </td>
+
+                      <td>
+                        <?php echo htmlspecialchars($customer["phone"] ?? "Not provided", ENT_QUOTES, "UTF-8"); ?>
+                      </td>
+
+                      <td>
+                        <?php echo date("d M Y", strtotime($customer["created_at"])); ?>
+                      </td>
+
+                      <td>
+                        <span class="badge">Active</span>
+                      </td>
+
+                      <td>
+                        <div class="actions">
+                          <a
+                            class="icon-button"
+                            href="view-customer.php?id=<?php echo (int) $customer['id']; ?>"
+                            title="View customer"
+                            aria-label="View customer">
+                            <i class="fa-regular fa-eye"></i>
+                          </a>
+
+                          <button
+                            class="icon-button"
+                            type="button"
+                            aria-label="Edit customer">
+                            <i class="fa-solid fa-pen"></i>
+                          </button>
+
+                          <button
+                            class="icon-button danger-action"
+                            type="button"
+                            aria-label="Delete customer">
+                            <i class="fa-regular fa-trash-can"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                  <?php endwhile; ?>
+
+                <?php else: ?>
+
+                  <tr>
+                    <td colspan="7">No registered customers found.</td>
+                  </tr>
+
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
