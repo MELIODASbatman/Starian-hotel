@@ -1,6 +1,61 @@
 <?php
+
+// Protect this page - only administrators can access it
 require_once __DIR__ . "/includes/auth.php";
+
+// Connect to the database
+require_once __DIR__ . "/../php/db.php";
+
+// Fetch all employees, excluding customers
+$sql = $conn->query("
+    SELECT
+        id,
+        fullname,
+        email,
+        phone,
+        avatar,
+        role,
+        status,
+        created_at
+    FROM users
+    WHERE role != 'customer'
+    ORDER BY id DESC
+");
+
+if (!$sql) {
+  error_log("Unable to fetch staff: " . $conn->error);
+  http_response_code(500);
+  exit("Unable to load staff members right now.");
+}
+
+// Store employee records
+$staffMembers = [];
+
+while ($row = $sql->fetch_assoc()) {
+  $staffMembers[] = $row;
+}
+
+// Calculate staff statistics
+$totalStaff = count($staffMembers);
+$activeStaff = 0;
+$inactiveStaff = 0;
+$departments = [];
+
+foreach ($staffMembers as $staff) {
+
+  if ($staff["status"] === "active") {
+    $activeStaff++;
+  } else {
+    $inactiveStaff++;
+  }
+
+  $departments[$staff["role"]] = true;
+}
+
+$totalDepartments = count($departments);
+
 ?>
+
 <!doctype html>
 <html lang="en">
 
@@ -34,35 +89,69 @@ require_once __DIR__ . "/includes/auth.php";
           <div>
             <h1>Staff Management</h1>
             <p>Manage hotel staff members, roles and access.</p>
-          </div><a class="button-primary" href="#"><i class="fa-solid fa-plus"></i>Add New Staff</a>
+          </div>
+          <a class="button-primary" href="add-staff.php">
+            <i class="fa-solid fa-plus"></i>Add New Staff
+          </a>
         </div>
+
         <section class="staff-summary">
           <article class="stat-card"><span class="stat-icon"><i class="fa-solid fa-users"></i></span>
-            <div><span class="stat-label">Total Staff</span><strong class="stat-value">12</strong><span class="stat-foot">Active staff members</span></div>
+            <div><span class="stat-label">Total Staff</span>
+              <strong class="stat-value"><?php echo $totalStaff; ?></strong>
+              <span class="stat-foot">Active staff members</span>
+            </div>
           </article>
           <article class="stat-card"><span class="stat-icon green"><i class="fa-solid fa-user-check"></i></span>
-            <div><span class="stat-label">Active Staff</span><strong class="stat-value">10</strong><span class="stat-foot">Currently working</span></div>
+            <div><span class="stat-label">Active Staff</span>
+              <strong class="stat-value"><?php echo $activeStaff; ?></strong><span class="stat-foot">Currently working</span>
+            </div>
           </article>
           <article class="stat-card"><span class="stat-icon" style="background:#ffe5e5;color:#ee5151"><i class="fa-solid fa-user-minus"></i></span>
-            <div><span class="stat-label">Inactive Staff</span><strong class="stat-value">2</strong><span class="stat-foot">On leave / not active</span></div>
+            <div><span class="stat-label">Inactive Staff</span>
+              <strong class="stat-value"><?php echo $inactiveStaff; ?></strong><span class="stat-foot">On leave / not active</span>
+            </div>
           </article>
           <article class="stat-card"><span class="stat-icon purple"><i class="fa-solid fa-briefcase"></i></span>
-            <div><span class="stat-label">Departments</span><strong class="stat-value">6</strong><span class="stat-foot">Different roles</span></div>
+            <div><span class="stat-label">Departments</span>
+              <strong class="stat-value"><?php echo $totalDepartments; ?></strong><span class="stat-foot">Different roles</span>
+            </div>
           </article>
         </section>
+
         <section class="panel">
           <div class="heading-actions" style="justify-content:space-between;margin-bottom:14px">
-            <label class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search staff by name, email or role..."></label>
-            <div class="heading-actions"><label class="select-control"><select aria-label="Filter by role">
-                  <option>All Roles</option>
-                  <option>Manager</option>
-                  <option>Receptionist</option>
-                  <option>Chef</option>
-                </select></label><label class="select-control"><select aria-label="Filter by status">
-                  <option>All Status</option>
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select></label></div>
+            <label class="search-box"><i class="fa-solid fa-magnifying-glass"></i>
+              <input
+                type="search"
+                id="staffSearch"
+                placeholder="Search staff by name, email or role..."
+                autocomplete="off">
+            </label>
+            <div class="heading-actions">
+              <label class="select-control">
+                <select id="roleFilter" aria-label="Filter by role">
+                  <option value="">All Roles</option>
+                  <option value="admin">Administrator</option>
+                  <option value="receptionist">Receptionist</option>
+                  <option value="chef">Chef</option>
+                  <option value="finance">Finance</option>
+                  <option value="waiter">Waiter</option>
+                  <option value="housekeeping">Housekeeping</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="security">Security</option>
+                  <option value="laundry">Laundry</option>
+                  <option value="groundskeeper">Groundskeeper</option>
+                </select>
+              </label>
+              <label class="select-control">
+                <select id="statusFilter" aria-label="Filter by status">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </label>
+            </div>
           </div>
           <div class="table-wrap">
             <table class="data-table">
@@ -81,128 +170,111 @@ require_once __DIR__ . "/includes/auth.php";
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select John Mwangi"></td>
-                  <td>1</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>John Mwangi</strong></td>
-                  <td><span class="badge blue">Manager</span></td>
-                  <td>john.mwangi@starianhotel.com</td>
-                  <td>+254 712 345 678</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>15 Oct 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit John Mwangi"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View John Mwangi"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete John Mwangi"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select Annita Wanjiku"></td>
-                  <td>2</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>Annita Wanjiku</strong></td>
-                  <td><span class="badge" style="background:#eee8ff;color:#7251d6">Receptionist</span></td>
-                  <td>annita.wanjiku@starianhotel.com</td>
-                  <td>+254 723 456 789</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>16 Oct 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit Annita Wanjiku"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View Annita Wanjiku"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete Annita Wanjiku"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select David Ochieng"></td>
-                  <td>3</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>David Ochieng</strong></td>
-                  <td><span class="badge warning">Chef</span></td>
-                  <td>david.ochieng@starianhotel.com</td>
-                  <td>+254 734 567 890</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>17 Oct 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit David Ochieng"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View David Ochieng"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete David Ochieng"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select Grace Njeri"></td>
-                  <td>4</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>Grace Njeri</strong></td>
-                  <td><span class="badge blue">Housekeeping</span></td>
-                  <td>grace.njeri@starianhotel.com</td>
-                  <td>+254 701 234 567</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>19 Oct 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit Grace Njeri"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View Grace Njeri"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete Grace Njeri"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select Peter Kamau"></td>
-                  <td>5</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>Peter Kamau</strong></td>
-                  <td><span class="badge" style="background:#ffe4ef;color:#c43773">Waiter</span></td>
-                  <td>peter.kamau@starianhotel.com</td>
-                  <td>+254 756 987 654</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>20 Oct 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit Peter Kamau"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View Peter Kamau"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete Peter Kamau"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select Lilian Achieng"></td>
-                  <td>6</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>Lilian Achieng</strong></td>
-                  <td><span class="badge" style="background:#eee8ff;color:#7251d6">Receptionist</span></td>
-                  <td>lilian.achieng@starianhotel.com</td>
-                  <td>+254 762 345 678</td>
-                  <td><span class="badge danger">Inactive</span></td>
-                  <td>22 Sep 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit Lilian Achieng"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View Lilian Achieng"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete Lilian Achieng"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select James Otieno"></td>
-                  <td>7</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>James Otieno</strong></td>
-                  <td><span class="badge blue">Maintenance</span></td>
-                  <td>james.otieno@starianhotel.com</td>
-                  <td>+254 715 789 012</td>
-                  <td><span class="badge">Active</span></td>
-                  <td>25 Oct 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit James Otieno"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View James Otieno"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete James Otieno"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
-                <tr>
-                  <td><input type="checkbox" aria-label="Select Beatrice Ndagwa"></td>
-                  <td>8</td>
-                  <td><span class="person-avatar"><i class="fa-solid fa-user-tie"></i></span></td>
-                  <td><strong>Beatrice Ndagwa</strong></td>
-                  <td><span class="badge blue">Housekeeping</span></td>
-                  <td>beatrice.ndagwa@starianhotel.com</td>
-                  <td>+254 780 123 456</td>
-                  <td><span class="badge danger">Inactive</span></td>
-                  <td>27 Aug 2025</td>
-                  <td>
-                    <div class="actions"><button class="icon-button" aria-label="Edit Beatrice Ndagwa"><i class="fa-solid fa-pen"></i></button><button class="icon-button" aria-label="View Beatrice Ndagwa"><i class="fa-regular fa-eye"></i></button><button class="icon-button danger-action" aria-label="Delete Beatrice Ndagwa"><i class="fa-regular fa-trash-can"></i></button></div>
-                  </td>
-                </tr>
+                <?php if (!empty($staffMembers)): ?>
+
+                  <?php foreach ($staffMembers as $index => $staff): ?>
+
+                    <tr>
+                      <td>
+                        <input
+                          type="checkbox"
+                          aria-label="Select <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
+                      </td>
+
+                      <td><?php echo $index + 1; ?></td>
+
+                      <td>
+                        <span class="person-avatar">
+                          <i class="fa-solid fa-user-tie"></i>
+                        </span>
+                      </td>
+
+                      <td>
+                        <strong>
+                          <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span class="badge blue">
+                          <?php echo htmlspecialchars(ucfirst($staff["role"]), ENT_QUOTES, "UTF-8"); ?>
+                        </span>
+                      </td>
+
+                      <td>
+                        <?php echo htmlspecialchars($staff["email"], ENT_QUOTES, "UTF-8"); ?>
+                      </td>
+
+                      <td>
+                        <?php echo htmlspecialchars($staff["phone"] ?? "Not provided", ENT_QUOTES, "UTF-8"); ?>
+                      </td>
+
+                      <td>
+                        <?php if ($staff["status"] === "active"): ?>
+                          <span class="badge">Active</span>
+                        <?php else: ?>
+                          <span class="badge danger">Inactive</span>
+                        <?php endif; ?>
+                      </td>
+
+                      <td>
+                        <?php
+                        echo !empty($staff["created_at"])
+                          ? date("d M Y", strtotime($staff["created_at"]))
+                          : "Not available";
+                        ?>
+                      </td>
+
+                      <td>
+                        <div class="actions">
+                          <button
+                            class="icon-button"
+                            type="button"
+                            aria-label="Edit <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
+                            <i class="fa-solid fa-pen"></i>
+                          </button>
+
+                          <button
+                            class="icon-button"
+                            type="button"
+                            aria-label="View <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
+                            <i class="fa-regular fa-eye"></i>
+                          </button>
+
+                          <button
+                            class="icon-button danger-action"
+                            type="button"
+                            aria-label="Delete <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
+                            <i class="fa-regular fa-trash-can"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                  <?php endforeach; ?>
+
+                <?php else: ?>
+
+                  <tr>
+                    <td colspan="10" style="text-align:center; padding:25px;">
+                      No staff members found.
+                    </td>
+                  </tr>
+
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
-          <div class="table-footer"><span>Showing 1 to 8 of 12 staff members</span>
-            <div class="pagination"><span><i class="fa-solid fa-chevron-left"></i></span><span class="current">1</span><span>2</span><span><i class="fa-solid fa-chevron-right"></i></span></div>
+          <div class="table-footer">
+            <span>
+              Showing <?php echo $totalStaff; ?> staff members
+            </span>
           </div>
         </section>
       </main>
     </div>
   </div>
+  <script src="staff.js?v=<?php echo filemtime(__DIR__ . '/staff.js'); ?>"></script>
 </body>
 
 </html>

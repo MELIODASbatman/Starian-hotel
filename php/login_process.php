@@ -84,6 +84,7 @@ $dashboards = [
   "admin" => "admin/index.php",
   "receptionist" => "reception/index.php",
   "chef" => "chef/index.php",
+  "finance" => "finance/index.php",
   "customer" => "dashboard.php"
 ];
 

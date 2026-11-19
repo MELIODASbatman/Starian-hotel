@@ -35,7 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   // Check the honeypot field for automated spam
   if (!empty($_POST["website"])) {
 
-    // Silently reject suspected spam
+    $_SESSION["contact_error"] =
+      "Your submission was blocked by our spam protection. Please try again.";
+
     header("Location: contact.php", true, 303);
     exit;
   }
