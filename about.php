@@ -2,10 +2,22 @@
 
 session_start();
 
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
-$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+
+// Check whether someone is logged in
 $isLoggedIn = isset($_SESSION["user_id"]);
 
+// Verify account status for logged-in customers
+if (
+  $isLoggedIn &&
+  ($_SESSION["role"] ?? "") === "customer"
+) {
+  require_once __DIR__ . "/includes/customer-auth.php";
+}
+
+// Load avatar information
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
 ?>
 <!doctype html>
 <html lang="en">

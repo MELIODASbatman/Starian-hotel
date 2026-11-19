@@ -70,13 +70,13 @@
 .contact-section {
   flex: 1;
   align-content: center;
-  width: min(1260px, 92%);
+  width: min(1440px, 96%);
   margin: 0 auto;
-  padding: 22px 0;
+  padding: 34px 0;
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
   align-items: center;
-  gap: clamp(22px, 3vw, 38px);
+  gap: clamp(28px, 4vw, 56px);
 }
 
 .section-heading {
@@ -196,7 +196,8 @@
 
 .message-card {
   min-width: 0;
-  padding: 18px clamp(18px, 3vw, 30px) 22px;
+  width: 100%;
+  padding: 30px clamp(24px, 3.5vw, 46px) 36px;
   border: 1px solid #e1eaf2;
   border-radius: 10px;
   background:
@@ -216,24 +217,24 @@
 
 .contact-form {
   display: grid;
-  gap: 10px;
+  gap: 15px;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
 }
 
 .form-field {
   min-width: 0;
-  min-height: 43px;
+  min-height: 58px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 13px;
+  gap: 14px;
+  padding: 0 16px;
   border: 1px solid #dce7f0;
-  border-radius: 7px;
+  border-radius: 9px;
   background: rgba(255, 255, 255, 0.83);
   box-shadow: 0 2px 6px rgba(16, 46, 73, 0.04);
 }
@@ -258,11 +259,11 @@
   background: transparent;
   color: #17324f;
   font: inherit;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .form-field input {
-  min-height: 41px;
+  min-height: 56px;
 }
 
 .form-field input::placeholder,
@@ -273,17 +274,17 @@
 
 .message-field {
   align-items: flex-start;
-  min-height: 72px;
-  padding-top: 12px;
+  min-height: 156px;
+  padding-top: 16px;
 }
 
 .message-field textarea {
-  min-height: 48px;
+  min-height: 128px;
   resize: vertical;
 }
 
 .send-button {
-  min-height: 43px;
+  min-height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -294,7 +295,7 @@
   background: #ffca28;
   color: #173d5c;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -339,10 +340,10 @@
 
 @media (max-width: 940px) {
   .contact-section {
-    width: 90%;
+    width: 96%;
     grid-template-columns: 1fr;
-    gap: 22px;
-    padding: 26px 0;
+    gap: 30px;
+    padding: 32px 0;
   }
 
   .contact-details {
@@ -382,8 +383,8 @@
   }
 
   .contact-section {
-    width: 88%;
-    padding: 23px 0;
+    width: 94%;
+    padding: 24px 0;
   }
 
   .section-heading {
@@ -438,7 +439,7 @@
   }
 
   .message-card {
-    padding: 18px 15px;
+    padding: 24px 18px;
   }
 
   .form-row {
@@ -446,6 +447,22 @@
   }
 
   .form-field {
-    min-height: 43px;
+    min-height: 54px;
   }
+
+  .message-field {
+    min-height: 140px;
+  }
+
+  .message-field textarea {
+    min-height: 112px;
+  }
+}
+/* Honeypot field - hidden from genuine visitors */
+.honeypot-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }

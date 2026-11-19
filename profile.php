@@ -1,16 +1,13 @@
 <?php
 
-session_start();
+// Check customer login and current account status
+require_once __DIR__ . "/includes/customer-auth.php";
 
-if (!isset($_SESSION["user_id"])) {
-  header("Location: login.php");
-  exit;
-}
-
-require_once "php/db.php";
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
 
 $userId = (int) $_SESSION["user_id"];
+
 $profileStatement = $conn->prepare(
   "SELECT fullname, email, phone, password, avatar
    FROM users

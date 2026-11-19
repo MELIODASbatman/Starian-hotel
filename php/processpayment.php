@@ -6,17 +6,111 @@ require_once __DIR__ . "/db.php";
 
 header("Content-Type: application/json");
 
+
 // 1. Check customer login
 if (!isset($_SESSION["user_id"])) {
+
   http_response_code(401);
+
   echo json_encode([
     "success" => false,
     "message" => "Please log in to continue."
   ]);
+
+  exit;
+}
+
+// 2. Check that the account belongs to a customer
+if (($_SESSION["role"] ?? "") !== "customer") {
+
+  http_response_code(403);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "You are not authorized to process payments."
+  ]);
+
   exit;
 }
 
 $user_id = (int) $_SESSION["user_id"];
+
+// 3. Check the customer's current account status
+$statusStatement = $conn->prepare(
+  "SELECT status
+     FROM users
+     WHERE id = ? AND role = 'customer'
+     LIMIT 1"
+);
+
+if (!$statusStatement) {
+
+  error_log("Unable to prepare customer status check: " . $conn->error);
+
+  http_response_code(500);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Unable to verify your account right now."
+  ]);
+
+  exit;
+}
+
+$statusStatement->bind_param("i", $user_id);
+
+if (!$statusStatement->execute()) {
+
+  error_log("Unable to check customer status: " . $statusStatement->error);
+
+  $statusStatement->close();
+
+  http_response_code(500);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Unable to verify your account right now."
+  ]);
+
+  exit;
+}
+
+$customer = $statusStatement->get_result()->fetch_assoc();
+
+$statusStatement->close();
+
+// Reject missing or inactive accounts
+if (!$customer || $customer["status"] !== "active") {
+
+  $_SESSION = [];
+
+  if (ini_get("session.use_cookies")) {
+
+    $params = session_get_cookie_params();
+
+    setcookie(
+      session_name(),
+      "",
+      time() - 42000,
+      $params["path"],
+      $params["domain"],
+      $params["secure"],
+      $params["httponly"]
+    );
+  }
+
+  session_destroy();
+
+  http_response_code(403);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Your account has been deactivated. Please contact the administrator.",
+    "redirect" => "../login.php?account=inactive"
+  ]);
+
+  exit;
+}
 
 // 2. Accept POST requests only
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {

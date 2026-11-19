@@ -1,3 +1,4 @@
+
 <?php
 
 session_start();
@@ -6,6 +7,7 @@ require_once __DIR__ . "/db.php";
 
 header("Content-Type: application/json");
 
+// Standard JSON response
 function availabilityResponse($success, $available, $message)
 {
   echo json_encode([
@@ -13,12 +15,121 @@ function availabilityResponse($success, $available, $message)
     "available" => $available,
     "message" => $message
   ]);
+
   exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-  availabilityResponse(false, false, "Invalid request method.");
+// STEP 1: Check whether the customer is logged in
+if (!isset($_SESSION["user_id"])) {
+
+  http_response_code(401);
+
+  availabilityResponse(
+    false,
+    false,
+    "Please log in before checking room availability."
+  );
 }
+
+// STEP 2: Check that the account belongs to a customer
+if (($_SESSION["role"] ?? "") !== "customer") {
+
+  http_response_code(403);
+
+  availabilityResponse(
+    false,
+    false,
+    "You are not authorized to check room availability."
+  );
+}
+
+// STEP 3: Accept POST requests only
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+
+  http_response_code(405);
+
+  availabilityResponse(
+    false,
+    false,
+    "Invalid request method."
+  );
+}
+
+// STEP 4: Check the customer's current account status
+$userId = (int) $_SESSION["user_id"];
+
+$statusStatement = $conn->prepare(
+  "SELECT status
+     FROM users
+     WHERE id = ? AND role = 'customer'
+     LIMIT 1"
+);
+
+if (!$statusStatement) {
+
+  error_log("Unable to prepare customer status check: " . $conn->error);
+
+  http_response_code(500);
+
+  availabilityResponse(
+    false,
+    false,
+    "Unable to verify your account right now."
+  );
+}
+
+$statusStatement->bind_param("i", $userId);
+
+if (!$statusStatement->execute()) {
+
+  error_log("Unable to check customer status: " . $statusStatement->error);
+
+  $statusStatement->close();
+
+  http_response_code(500);
+
+  availabilityResponse(
+    false,
+    false,
+    "Unable to verify your account right now."
+  );
+}
+
+$customer = $statusStatement->get_result()->fetch_assoc();
+
+$statusStatement->close();
+
+// Reject missing or inactive accounts
+if (!$customer || $customer["status"] !== "active") {
+
+  $_SESSION = [];
+
+  if (ini_get("session.use_cookies")) {
+
+    $params = session_get_cookie_params();
+
+    setcookie(
+      session_name(),
+      "",
+      time() - 42000,
+      $params["path"],
+      $params["domain"],
+      $params["secure"],
+      $params["httponly"]
+    );
+  }
+
+  session_destroy();
+
+  http_response_code(403);
+
+  availabilityResponse(
+    false,
+    false,
+    "Your account has been deactivated. Please contact the administrator."
+  );
+}
+
 
 $room_codes = $_POST["room_codes"] ?? [];
 if (!is_array($room_codes)) {

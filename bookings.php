@@ -1,25 +1,20 @@
 <?php
 
-session_start();
+// Check customer login and account status
+require_once __DIR__ . "/includes/customer-auth.php";
 
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
+
 $avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
-require_once "php/db.php";
 
-// Ensure the guest is logged in
-if (!isset($_SESSION["user_id"])) {
-  header("Location: login.html");
-  exit;
-}
-
-// Get the logged-in guest's details
+// Get logged-in customer's details
 $user_id = (int) $_SESSION["user_id"];
 
 $fullname = $_SESSION["fullname"] ?? "Guest";
 $email = $_SESSION["email"] ?? "";
 
-
-// Retrieve bookings belonging to the logged-in guest
+// Retrieve bookings belonging to the logged-in customer
 $sql = $conn->prepare(
   "SELECT
         bookings.id,
@@ -38,8 +33,20 @@ $sql = $conn->prepare(
      ORDER BY bookings.created_at DESC"
 );
 
+if (!$sql) {
+  error_log("Unable to prepare customer bookings query: " . $conn->error);
+  http_response_code(500);
+  exit("Unable to load your bookings right now.");
+}
+
 $sql->bind_param("i", $user_id);
-$sql->execute();
+
+if (!$sql->execute()) {
+  error_log("Unable to retrieve customer bookings: " . $sql->error);
+  $sql->close();
+  http_response_code(500);
+  exit("Unable to load your bookings right now.");
+}
 
 $result = $sql->get_result();
 
@@ -71,6 +78,7 @@ $roomImages = [
 ];
 
 ?>
+
 
 <!doctype html>
 <html lang="en">

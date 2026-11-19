@@ -1,11 +1,26 @@
 <?php
+
 session_start();
 
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
-$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+
+// Check whether someone is logged in
 $isLoggedIn = isset($_SESSION["user_id"]);
 
-require_once "php/db.php";
+// Verify account status for logged-in customers
+if (
+  $isLoggedIn &&
+  ($_SESSION["role"] ?? "") === "customer"
+) {
+  require_once __DIR__ . "/includes/customer-auth.php";
+}
+
+// Load avatar information
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+
+// Connect to database
+require_once __DIR__ . "/php/db.php";
 
 $categories = require __DIR__ . "/php/menu_categories.php";
 

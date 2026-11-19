@@ -1,9 +1,27 @@
 <?php
 session_start();
 
+// Create a CSRF token if one does not already exist
+if (empty($_SESSION["contact_csrf_token"])) {
+  $_SESSION["contact_csrf_token"] = bin2hex(random_bytes(32));
+}
+
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
-$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+
+// Check whether someone is logged in
 $isLoggedIn = isset($_SESSION["user_id"]);
+
+// Verify account status for logged-in customers
+if (
+  $isLoggedIn &&
+  ($_SESSION["role"] ?? "") === "customer"
+) {
+  require_once __DIR__ . "/includes/customer-auth.php";
+}
+
+// Load avatar information
+$avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
 
 // Retrieve any notification saved during the previous request.
 $successMessage = $_SESSION["contact_success"] ?? "";
@@ -14,20 +32,59 @@ unset($_SESSION["contact_success"], $_SESSION["contact_error"]);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
+  // Check the honeypot field for automated spam
+  if (!empty($_POST["website"])) {
+
+    // Silently reject suspected spam
+    header("Location: contact.php", true, 303);
+    exit;
+  }
+
+  // Verify the CSRF token
+  if (
+    !isset($_POST["contact_csrf_token"]) ||
+    !hash_equals(
+      $_SESSION["contact_csrf_token"],
+      $_POST["contact_csrf_token"]
+    )
+  ) {
+
+    $_SESSION["contact_error"] =
+      "Invalid form submission. Please refresh the page and try again.";
+
+    header("Location: contact.php", true, 303);
+    exit;
+  }
+
+  // Prevent repeated contact form submissions
+  $lastSubmission = $_SESSION["contact_last_submission"] ?? 0;
+
+  if (time() - $lastSubmission < 30) {
+
+    $_SESSION["contact_error"] =
+      "Please wait 30 seconds before sending another message.";
+
+    header("Location: contact.php", true, 303);
+    exit;
+  }
+
   $name = trim($_POST["name"] ?? "");
   $email = trim($_POST["email"] ?? "");
   $phone = trim($_POST["phone"] ?? "");
   $message = trim($_POST["message"] ?? "");
 
-  if ($name === "" || $email === "" || $message === "") {
+  if ($name === "" || $email === "" || $phone === "" || $message === "") {
 
     $_SESSION["contact_error"] =
-      "Please fill in your name, email address and message.";
+      "Please fill in your name, email address, phone number and message.";
   } elseif (
-    !filter_var($email, FILTER_VALIDATE_EMAIL)
+    !preg_match("/^[\p{L}\p{M}\s.'-]+$/u", $name)
+    || !filter_var($email, FILTER_VALIDATE_EMAIL)
+    || ($phone !== "" && !preg_match("/^[0-9+\s().-]+$/", $phone))
     || strlen($name) > 100
     || strlen($email) > 150
     || strlen($phone) > 30
+    || trim($message) === ""
     || strlen($message) > 5000
   ) {
 
@@ -47,6 +104,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $stmt->bind_param("ssss", $name, $email, $phone, $message);
 
       if ($stmt->execute()) {
+
+        // Record the time of the successful submission
+        $_SESSION["contact_last_submission"] = time();
 
         $_SESSION["contact_success"] =
           "Thank you! Your message has been received successfully.";
@@ -86,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
   <link rel="stylesheet" href="css/signup.css?v=9" />
-  <link rel="stylesheet" href="css/contact.css?v=1" />
+  <link rel="stylesheet" href="css/contact.css?v=2" />
 </head>
 
 <body class="contact-page">
@@ -223,7 +283,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <span aria-hidden="true"></span>
           </div>
           <p class="message-intro">
-            Fill in the form below and we'll get back to you shortly.
+            Complete all fields below and we'll get back to you shortly.
           </p>
 
           <?php if ($successMessage !== ""): ?>
@@ -242,6 +302,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             class="contact-form"
             action="contact.php"
             method="post">
+            <input
+              type="hidden"
+              name="contact_csrf_token"
+              value="<?php echo htmlspecialchars($_SESSION["contact_csrf_token"], ENT_QUOTES, 'UTF-8'); ?>">
+            <!-- Honeypot field to catch automated spam bots -->
+            <div class="honeypot-field" aria-hidden="true">
+              <label for="website">Leave this field empty</label>
+              <input
+                type="text"
+                name="website"
+                id="website"
+                tabindex="-1"
+                autocomplete="off">
+            </div>
             <div class="form-row">
               <label class="form-field">
                 <span class="field-icon">
@@ -272,12 +346,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <span class="field-icon">
                 <i class="fa-solid fa-phone-volume" aria-hidden="true"></i>
               </span>
-              <span class="visually-hidden">Phone Number (optional)</span>
+              <span class="visually-hidden">Phone Number</span>
               <input
                 type="tel"
                 name="phone"
-                placeholder="Phone Number (optional)"
-                autocomplete="tel" />
+                placeholder="Phone Number"
+                autocomplete="tel"
+                required />
             </label>
             <label class="form-field message-field">
               <span class="field-icon">

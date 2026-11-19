@@ -111,7 +111,7 @@ if ($sql) {
   <meta name="description" content="Manage Starian Hotel rooms">
   <title>Manage Rooms | Starian Hotel Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css?v=20261118-room-filter">
+  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
   <script src="../javascript/admin-search.js?v=20261118-room-filter" defer></script>
 </head>
 
@@ -129,12 +129,12 @@ if ($sql) {
         <a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a>
         <a href="staff.php"><i class="fa-solid fa-user-group"></i>Staff</a>
         <a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a>
-        <a href="#"><i class="fa-solid fa-gear"></i>Settings</a>
+       <a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
       <p class="sidebar-motto">Better Service<span>Better Stays</span></p>
     </aside>
     <div class="workspace">
-      <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><a class="topbar-icon" href="#" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="notification-dot">3</span></a>
+      <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><?php require __DIR__ . "/includes/notification-widget.php"; ?>
         <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
         <form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
       </header>

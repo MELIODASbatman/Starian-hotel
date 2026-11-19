@@ -140,7 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-  <link rel="stylesheet" href="admin.css?v=20261113-menu-form">
+  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
 </head>
 
 <body>
@@ -196,9 +196,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <a href="reports.php">
           <i class="fa-solid fa-chart-column"></i>Reports
         </a>
-
-        <a href="#">
-          <i class="fa-solid fa-gear"></i>Settings
+        <a href="contact-messages.php">
+          <i class="fa-regular fa-envelope"></i>Contact Messages
         </a>
 
       </nav>
@@ -220,10 +219,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         <span class="topbar-spacer"></span>
 
-        <a class="topbar-icon" href="#" aria-label="Notifications">
-          <i class="fa-regular fa-bell"></i>
-          <span class="notification-dot">3</span>
-        </a>
+        <?php require __DIR__ . "/includes/notification-widget.php"; ?>
 
         <div class="top-admin">
           <span class="admin-avatar">

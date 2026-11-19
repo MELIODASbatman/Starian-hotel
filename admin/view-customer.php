@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/includes/auth.php";
 require_once __DIR__ . "/../php/db.php";
+require_once __DIR__ . "/../php/avatar_helpers.php";
 
 $adminName = $_SESSION["fullname"] ?? "Administrator";
 
@@ -16,7 +17,7 @@ if (!$customerId || $customerId < 1) {
 
 // Fetch customer details
 $customerStmt = $conn->prepare("
-    SELECT id, fullname, email, phone, avatar, role, created_at
+    SELECT id, fullname, email, phone, avatar, role, created_at, status
     FROM users
     WHERE id = ? AND role = 'customer'
 ");
@@ -32,6 +33,8 @@ $customerStmt->close();
 if (!$customer) {
   die("Customer not found.");
 }
+
+$customerAvatar = getAvatarFilename($customer["avatar"] ?? null);
 ?>
 
 <!doctype html>
@@ -44,7 +47,7 @@ if (!$customer) {
   <title>Customer Details | Starian Hotel Admin</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
 </head>
 
 <body>
@@ -80,7 +83,7 @@ if (!$customer) {
         </a>
         <a href="staff.php"><i class="fa-solid fa-user-group"></i>Staff</a>
         <a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a>
-        <a href="#"><i class="fa-solid fa-gear"></i>Settings</a>
+       <a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
 
       <p class="sidebar-motto">
@@ -100,10 +103,7 @@ if (!$customer) {
 
         <span class="topbar-spacer"></span>
 
-        <a class="topbar-icon" href="#" aria-label="Notifications">
-          <i class="fa-regular fa-bell"></i>
-          <span class="notification-dot">3</span>
-        </a>
+        <?php require __DIR__ . "/includes/notification-widget.php"; ?>
 
         <div class="top-admin">
           <span class="admin-avatar">
@@ -147,13 +147,9 @@ if (!$customer) {
             <div class="customer-profile">
 
               <div class="person-avatar">
-                <?php if (!empty($customer["avatar"])): ?>
-                  <img
-                    src="../img/avatars/<?php echo htmlspecialchars(basename($customer["avatar"]), ENT_QUOTES, "UTF-8"); ?>"
-                    alt="Customer photo">
-                <?php else: ?>
-                  <i class="fa-solid fa-user"></i>
-                <?php endif; ?>
+                <img
+                  src="../img/avatars/<?php echo htmlspecialchars($customerAvatar, ENT_QUOTES, "UTF-8"); ?>"
+                  alt="<?php echo htmlspecialchars($customer["fullname"], ENT_QUOTES, "UTF-8"); ?> avatar">
               </div>
 
               <div>

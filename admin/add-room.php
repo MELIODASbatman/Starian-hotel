@@ -161,7 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-  <link rel="stylesheet" href="admin.css?v=20261102-room-form-theme">
+  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
 </head>
 
 <body>
@@ -182,7 +182,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a>
         <a href="staff.php"><i class="fa-solid fa-user-group"></i>Staff</a>
         <a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a>
-        <a href="#"><i class="fa-solid fa-gear"></i>Settings</a>
+       <a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
       <p class="sidebar-motto">Better Service<span>Better Stays</span></p>
     </aside>
@@ -190,7 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <header class="topbar">
         <label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label>
         <span class="topbar-spacer"></span>
-        <a class="topbar-icon" href="#" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="notification-dot">3</span></a>
+        <?php require __DIR__ . "/includes/notification-widget.php"; ?>
         <div class="top-admin">
           <span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span>
           <span><strong><?= htmlspecialchars($adminName, ENT_QUOTES, "UTF-8") ?></strong><small>Administrator</small></span>

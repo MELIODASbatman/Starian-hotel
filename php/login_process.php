@@ -28,9 +28,18 @@ if (empty($email) || empty($password)) {
   exit;
 }
 
+// Validate email format
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  echo json_encode([
+    "success" => false,
+    "message" => "Please enter a valid email address."
+  ]);
+  exit;
+}
+
 // Retrieve user including their role
 $sql = $conn->prepare(
-  "SELECT id, fullname, email, password, avatar, role
+  "SELECT id, fullname, email, password, avatar, role, status
      FROM users
      WHERE email = ?
      LIMIT 1"
@@ -57,6 +66,15 @@ if (!password_verify($password, $user["password"])) {
   echo json_encode([
     "success" => false,
     "message" => "Invalid email or password"
+  ]);
+  exit;
+}
+
+// Check whether the account is active
+if ($user["status"] !== "active") {
+  echo json_encode([
+    "success" => false,
+    "message" => "Your account has been deactivated. Please contact the administrator."
   ]);
   exit;
 }

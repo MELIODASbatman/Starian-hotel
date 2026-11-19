@@ -1,16 +1,22 @@
 <?php
 require_once __DIR__ . "/includes/auth.php";
 require_once __DIR__ . "/../php/db.php";
+require_once __DIR__ . "/../php/avatar_helpers.php";
 
 $adminName = $_SESSION["fullname"] ?? "Administrator";
+
+// Generate CSRF token for customer status changes
+if (empty($_SESSION["customer_status_csrf_token"])) {
+  $_SESSION["customer_status_csrf_token"] = bin2hex(random_bytes(32));
+}
 
 // Customer search
 $search = trim($_GET["search"] ?? "");
 
 // Fetch registered customers
 $sql = "
-    SELECT id, fullname, email, phone, avatar, created_at
-    FROM users
+    SELECT id, fullname, email, phone, avatar, created_at, status
+FROM users
     WHERE role = 'customer'
 ";
 
@@ -51,7 +57,7 @@ $stmt->close();
   <meta name="description" content="Manage Starian Hotel customers">
   <title>Customers | Starian Hotel Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
 </head>
 
 <body>
@@ -61,12 +67,12 @@ $stmt->close();
       <a class="brand" href="index.php"><img src="../img/starianlogo.png" alt=""><span class="brand-name">Starian <span>Hotel</span></span></a>
       <div class="admin-identity"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
       <nav class="side-nav" aria-label="Admin navigation">
-        <a href="index.php"><i class="fa-solid fa-house"></i>Dashboard</a><a href="rooms.php"><i class="fa-solid fa-bed"></i>Rooms</a><a href="menu-orders.php"><i class="fa-solid fa-utensils"></i>Menu / Orders</a><a href="bookings.php"><i class="fa-regular fa-calendar-check"></i>Bookings</a><a class="active" href="customers.php" aria-current="page"><i class="fa-solid fa-users"></i>Customers</a><a href="staff.php"><i class="fa-solid fa-user-group"></i>Staff</a><a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a><a href="#"><i class="fa-solid fa-gear"></i>Settings</a>
+        <a href="index.php"><i class="fa-solid fa-house"></i>Dashboard</a><a href="rooms.php"><i class="fa-solid fa-bed"></i>Rooms</a><a href="menu-orders.php"><i class="fa-solid fa-utensils"></i>Menu / Orders</a><a href="bookings.php"><i class="fa-regular fa-calendar-check"></i>Bookings</a><a class="active" href="customers.php" aria-current="page"><i class="fa-solid fa-users"></i>Customers</a><a href="staff.php"><i class="fa-solid fa-user-group"></i>Staff</a><a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a><a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
       <p class="sidebar-motto">Better Service<span>Better Stays</span></p>
     </aside>
     <div class="workspace">
-      <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><a class="topbar-icon" href="#" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="notification-dot">3</span></a>
+      <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><?php require __DIR__ . "/includes/notification-widget.php"; ?>
         <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
         <form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
       </header>
@@ -107,17 +113,14 @@ $stmt->close();
                 <?php if ($customersResult->num_rows > 0): ?>
 
                   <?php while ($customer = $customersResult->fetch_assoc()): ?>
+                    <?php $customerAvatar = getAvatarFilename($customer["avatar"] ?? null); ?>
 
                     <tr>
                       <td>
                         <span class="person-avatar">
-                          <?php if (!empty($customer["avatar"])): ?>
-                            <img
-                              src="../img/avatars/<?php echo htmlspecialchars(basename($customer["avatar"]), ENT_QUOTES, "UTF-8"); ?>"
-                              alt="Customer photo">
-                          <?php else: ?>
-                            <i class="fa-solid fa-user"></i>
-                          <?php endif; ?>
+                          <img
+                            src="../img/avatars/<?php echo htmlspecialchars($customerAvatar, ENT_QUOTES, "UTF-8"); ?>"
+                            alt="<?php echo htmlspecialchars($customer["fullname"], ENT_QUOTES, "UTF-8"); ?> avatar">
                         </span>
                       </td>
 
@@ -140,7 +143,11 @@ $stmt->close();
                       </td>
 
                       <td>
-                        <span class="badge">Active</span>
+                        <?php if ($customer["status"] === "active"): ?>
+                          <span class="badge">Active</span>
+                        <?php else: ?>
+                          <span class="badge">Inactive</span>
+                        <?php endif; ?>
                       </td>
 
                       <td>
@@ -153,19 +160,55 @@ $stmt->close();
                             <i class="fa-regular fa-eye"></i>
                           </a>
 
-                          <button
+                          <a
                             class="icon-button"
-                            type="button"
+                            href="edit-customer.php?id=<?php echo (int) $customer['id']; ?>"
+                            title="Edit customer"
                             aria-label="Edit customer">
                             <i class="fa-solid fa-pen"></i>
-                          </button>
+                          </a>
 
-                          <button
-                            class="icon-button danger-action"
-                            type="button"
-                            aria-label="Delete customer">
-                            <i class="fa-regular fa-trash-can"></i>
-                          </button>
+                          <form
+                            method="POST"
+                            action="update-customer-status.php"
+                            onsubmit="return confirm('<?php echo $customer['status'] === 'active' ? 'Are you sure you want to deactivate this customer?' : 'Are you sure you want to reactivate this customer?'; ?>');">
+                            <input
+                              type="hidden"
+                              name="customer_id"
+                              value="<?php echo (int) $customer['id']; ?>">
+
+                            <input
+                              type="hidden"
+                              name="csrf_token"
+                              value="<?php echo htmlspecialchars($_SESSION['customer_status_csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
+
+                            <input
+                              type="hidden"
+                              name="status"
+                              value="<?php echo $customer['status'] === 'active' ? 'inactive' : 'active'; ?>">
+
+                            <?php if ($customer['status'] === 'active'): ?>
+
+                              <button
+                                class="icon-button danger-action"
+                                type="submit"
+                                title="Deactivate customer"
+                                aria-label="Deactivate customer">
+                                <i class="fa-solid fa-user-slash"></i>
+                              </button>
+
+                            <?php else: ?>
+
+                              <button
+                                class="icon-button"
+                                type="submit"
+                                title="Reactivate customer"
+                                aria-label="Reactivate customer">
+                                <i class="fa-solid fa-user-check"></i>
+                              </button>
+
+                            <?php endif; ?>
+                          </form>
                         </div>
                       </td>
                     </tr>

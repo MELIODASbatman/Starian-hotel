@@ -2,19 +2,16 @@
 
 session_start();
 
+// Check customer login, role and current account status
+require_once __DIR__ . "/includes/customer-auth.php";
+
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
+
 $avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
-$isLoggedIn = isset($_SESSION["user_id"]);
+$isLoggedIn = true;
 
-require_once __DIR__ . "/php/db.php";
-
-// Ensure the customer is logged in.
-if (!isset($_SESSION["user_id"])) {
-  header("Location: login.php");
-  exit;
-}
-
-// Get the logged-in customer's ID.
+// Get the logged-in customer's ID
 $user_id = (int) $_SESSION["user_id"];
 
 // Accept either the original single-booking URL or a comma-separated batch.

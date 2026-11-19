@@ -1,13 +1,16 @@
+
 <?php
 
 session_start();
 
-require_once __DIR__ . "/db.php";
-
 header("Content-Type: application/json");
 
-// STEP 1: Check whether the guest is logged in
+require_once __DIR__ . "/db.php";
+
+// STEP 1: Check whether the customer is logged in
 if (!isset($_SESSION["user_id"])) {
+
+  http_response_code(401);
 
   echo json_encode([
     "success" => false,
@@ -17,8 +20,23 @@ if (!isset($_SESSION["user_id"])) {
   exit;
 }
 
-// STEP 2: Accept POST requests only
+// STEP 2: Check that the account belongs to a customer
+if (($_SESSION["role"] ?? "") !== "customer") {
+
+  http_response_code(403);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "You are not authorized to make a booking."
+  ]);
+
+  exit;
+}
+
+// STEP 3: Accept POST requests only
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+
+  http_response_code(405);
 
   echo json_encode([
     "success" => false,
@@ -27,6 +45,86 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
   exit;
 }
+
+// STEP 4: Check the customer's current account status
+$userId = (int) $_SESSION["user_id"];
+
+$statusStatement = $conn->prepare(
+  "SELECT status
+     FROM users
+     WHERE id = ? AND role = 'customer'
+     LIMIT 1"
+);
+
+if (!$statusStatement) {
+
+  error_log("Unable to prepare customer status check: " . $conn->error);
+
+  http_response_code(500);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Unable to verify your account right now."
+  ]);
+
+  exit;
+}
+
+$statusStatement->bind_param("i", $userId);
+
+if (!$statusStatement->execute()) {
+
+  error_log("Unable to check customer status: " . $statusStatement->error);
+
+  $statusStatement->close();
+
+  http_response_code(500);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Unable to verify your account right now."
+  ]);
+
+  exit;
+}
+
+$customer = $statusStatement->get_result()->fetch_assoc();
+
+$statusStatement->close();
+
+// Reject missing or inactive accounts
+if (!$customer || $customer["status"] !== "active") {
+
+  $_SESSION = [];
+
+  if (ini_get("session.use_cookies")) {
+
+    $params = session_get_cookie_params();
+
+    setcookie(
+      session_name(),
+      "",
+      time() - 42000,
+      $params["path"],
+      $params["domain"],
+      $params["secure"],
+      $params["httponly"]
+    );
+  }
+
+  session_destroy();
+
+  http_response_code(403);
+
+  echo json_encode([
+    "success" => false,
+    "message" => "Your account has been deactivated. Please contact the administrator.",
+    "redirect" => "../login.php?account=inactive"
+  ]);
+
+  exit;
+}
+
 
 // STEP 3: Get the submitted form data
 $room_codes = $_POST["room_codes"] ?? [];

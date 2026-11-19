@@ -1,22 +1,18 @@
 <?php
 
-session_start();
+// Check customer login and account status
+require_once __DIR__ . "/includes/customer-auth.php";
 
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
+
 $avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+
 $isLoggedIn = isset($_SESSION["user_id"]) && !empty($_SESSION["user_id"]);
 
-// Check whether the user is logged in
-if (!$isLoggedIn) {
-  header("Location: login.php");
-  exit;
-}
-
-// Get the logged-in user's information
+// Get logged-in user's information
 $fullname = $_SESSION["fullname"] ?? "";
 $email = $_SESSION["email"] ?? "";
-
-require_once "php/db.php";
 
 $userId = (int) $_SESSION["user_id"];
 

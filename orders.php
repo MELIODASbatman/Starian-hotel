@@ -1,36 +1,35 @@
 <?php
 
-session_start();
+// Check customer login and current account status
+require_once __DIR__ . "/includes/customer-auth.php";
 
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
+
 $avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
-if (!isset($_SESSION["user_id"])) {
-  header("Location: login.php");
-  exit;
-}
 
-require_once "php/db.php";
-
+// Get logged-in customer's details
 $userId = (int) $_SESSION["user_id"];
 $fullname = $_SESSION["fullname"] ?? "Guest";
 
+// Retrieve the customer's food orders
 $orderStatement = $conn->prepare(
   "SELECT
-      food_orders.id AS order_id,
-      food_orders.created_at,
-      food_orders.total_amount,
-      food_orders.order_status,
-      food_order_items.id AS item_id,
-      food_order_items.quantity,
-      food_menu.food_name,
-      food_menu.image
-   FROM food_orders
-   LEFT JOIN food_order_items
-      ON food_order_items.order_id = food_orders.id
-   LEFT JOIN food_menu
-      ON food_menu.id = food_order_items.food_id
-   WHERE food_orders.user_id = ?
-   ORDER BY food_orders.created_at DESC, food_orders.id DESC, food_order_items.id ASC"
+        food_orders.id AS order_id,
+        food_orders.created_at,
+        food_orders.total_amount,
+        food_orders.order_status,
+        food_order_items.id AS item_id,
+        food_order_items.quantity,
+        food_menu.food_name,
+        food_menu.image
+     FROM food_orders
+     LEFT JOIN food_order_items
+        ON food_order_items.order_id = food_orders.id
+     LEFT JOIN food_menu
+        ON food_menu.id = food_order_items.food_id
+     WHERE food_orders.user_id = ?
+     ORDER BY food_orders.created_at DESC, food_orders.id DESC, food_order_items.id ASC"
 );
 
 if (!$orderStatement) {
@@ -43,6 +42,7 @@ $orderStatement->bind_param("i", $userId);
 
 if (!$orderStatement->execute()) {
   error_log("Unable to load customer orders: " . $orderStatement->error);
+  $orderStatement->close();
   http_response_code(500);
   exit("Unable to load your orders right now.");
 }
@@ -92,6 +92,7 @@ $statusCategories = [
 ];
 
 ?>
+
 <!doctype html>
 <html lang="en">
 

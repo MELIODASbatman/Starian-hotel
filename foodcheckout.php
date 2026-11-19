@@ -2,16 +2,19 @@
 
 session_start();
 
+// Check customer login, role and current account status
+require_once __DIR__ . "/includes/customer-auth.php";
+
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
+
 $avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
+
+// Load database connection
 require_once __DIR__ . "/php/db.php";
 
-if (!isset($_SESSION["user_id"])) {
-  header("Location: login.php");
-  exit;
-}
-
 $user_id = (int) $_SESSION["user_id"];
+
 $order_id = filter_input(INPUT_GET, "order_id", FILTER_VALIDATE_INT);
 
 if (!$order_id || $order_id < 1) {
@@ -363,8 +366,8 @@ function escapeHTML($value)
           class="pay-button"
           id="pay-button"
           type="button"
-          data-demo-message="Demo mode: no payment was made, no payment details were submitted, and your food order remains pending.">
-          Pay KSh <?= $order_total_display ?>
+          data-order-id="<?= (int) $order["id"] ?>">
+          Continue to Confirmation
         </button>
         <div class="confirmation-actions">
           <a
@@ -456,7 +459,7 @@ function escapeHTML($value)
   </footer>
 
   <script src="javascript/navigation.js?v=1"></script>
-  <script src="javascript/checkout.js?v=2"></script>
+  <script src="javascript/foodcheckout.js?v=1"></script>
 </body>
 
 </html>

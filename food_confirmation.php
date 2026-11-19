@@ -2,16 +2,20 @@
 
 session_start();
 
+// Check customer login, role and current account status
+require_once __DIR__ . "/includes/customer-auth.php";
+
+// Load avatar helper
 require_once __DIR__ . "/php/avatar_helpers.php";
+
 $avatarFilename = getAvatarFilename($_SESSION["avatar"] ?? null);
-$isLoggedIn = isset($_SESSION["user_id"]);
 
-if (!$isLoggedIn) {
-  header("Location: login.php");
-  exit;
-}
+// Customer authentication has already been confirmed
+$isLoggedIn = true;
 
-require_once __DIR__ . "/php/db.php";
+// Database connection is already loaded by customer-auth.php
+$userId = (int) $_SESSION["user_id"];
+
 
 $userId = (int) $_SESSION["user_id"];
 $orderId = filter_input(INPUT_GET, "order_id", FILTER_VALIDATE_INT);
@@ -303,14 +307,14 @@ function escapeHTML($value)
           <p>
             <span>Payment status</span>
             <strong><?= $order["payment_method"] === "pay_at_hotel"
-              ? "Due at hotel"
-              : escapeHTML(ucfirst($order["payment_status"])) ?></strong>
+                      ? "Due at hotel"
+                      : escapeHTML(ucfirst($order["payment_status"])) ?></strong>
           </p>
           <p>
             <span>Payment method</span>
             <strong><?= $order["payment_method"] === "pay_at_hotel"
-              ? "Pay at Hotel"
-              : escapeHTML(ucfirst($order["payment_method"])) ?></strong>
+                      ? "Pay at Hotel"
+                      : escapeHTML(ucfirst($order["payment_method"])) ?></strong>
           </p>
         </div>
 
