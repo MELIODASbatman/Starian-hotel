@@ -30,3 +30,28 @@ if (notificationButton && notificationDropdown) {
     }
   });
 }
+
+document.querySelectorAll(".staff-toast").forEach(function (toast) {
+  let isDismissing = false;
+  let dismissTimer;
+
+  function dismissToast() {
+    if (isDismissing) {
+      return;
+    }
+
+    isDismissing = true;
+    window.clearTimeout(dismissTimer);
+    toast.classList.add("is-hiding");
+    window.setTimeout(function () {
+      toast.remove();
+    }, 250);
+  }
+
+  const dismissButton = toast.querySelector(".staff-toast-dismiss");
+  if (dismissButton) {
+    dismissButton.addEventListener("click", dismissToast);
+  }
+
+  dismissTimer = window.setTimeout(dismissToast, 5000);
+});

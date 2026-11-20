@@ -25,6 +25,9 @@ $stmt = $conn->prepare("
         avatar,
         role,
         status,
+        employment_status,
+        departure_date,
+        departure_reason,
         created_at
     FROM users
     WHERE id = ? AND role != 'customer'
@@ -90,6 +93,7 @@ $staffAvatar = getAvatarFilename($staff["avatar"] ?? null);
         <a href="bookings.php"><i class="fa-regular fa-calendar-check"></i>Bookings</a>
         <a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a>
         <a class="active" href="staff.php" aria-current="page"><i class="fa-solid fa-user-group"></i>Staff</a>
+        <a href="former-staff.php"><i class="fa-solid fa-user-clock"></i>Former Staff</a>
         <a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a>
         <a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
@@ -182,6 +186,12 @@ $staffAvatar = getAvatarFilename($staff["avatar"] ?? null);
               <span><?php echo htmlspecialchars(ucfirst($staff["status"]), ENT_QUOTES, "UTF-8"); ?></span>
             </div>
             <div class="staff-detail">
+              <strong>Employment Status</strong>
+              <span>
+                <?php echo htmlspecialchars(ucfirst($staff["employment_status"]), ENT_QUOTES, "UTF-8"); ?>
+              </span>
+            </div>
+            <div class="staff-detail">
               <strong>Registration Date</strong>
               <span>
                 <?php
@@ -191,6 +201,44 @@ $staffAvatar = getAvatarFilename($staff["avatar"] ?? null);
                 ?>
               </span>
             </div>
+          </div>
+          <?php if (in_array($staff["employment_status"], ["resigned", "terminated", "retired"], true)): ?>
+
+            <hr class="staff-divider">
+
+            <h3 class="staff-section-heading">Departure Information</h3>
+
+            <div class="staff-detail-grid">
+
+              <div class="staff-detail">
+                <strong>Departure Date</strong>
+                <span>
+                  <?php
+                  echo !empty($staff["departure_date"])
+                    ? date("d M Y", strtotime($staff["departure_date"]))
+                    : "Not provided";
+                  ?>
+                </span>
+              </div>
+
+              <div class="staff-detail">
+                <strong>Reason for Leaving</strong>
+                <span>
+                  <?php
+                  echo !empty($staff["departure_reason"])
+                    ? nl2br(htmlspecialchars($staff["departure_reason"], ENT_QUOTES, "UTF-8"))
+                    : "Not provided";
+                  ?>
+                </span>
+              </div>
+
+            </div>
+
+          <?php endif; ?>
+          <div class="table-footer">
+            <span>
+              Showing 1 staff member
+            </span>
           </div>
         </section>
       </main>

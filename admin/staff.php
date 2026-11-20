@@ -21,10 +21,25 @@ $sql = $conn->query("
         avatar,
         role,
         status,
+        employment_status,
+        departure_date,
+        departure_reason,
         created_at
     FROM users
     WHERE role != 'customer'
-    ORDER BY id DESC
+   ORDER BY FIELD(
+    role,
+    'admin',
+    'finance',
+    'receptionist',
+    'chef',
+    'waiter',
+    'housekeeping',
+    'maintenance',
+    'security',
+    'laundry',
+    'groundskeeper'
+), id DESC
 ");
 
 if (!$sql) {
@@ -59,11 +74,30 @@ foreach ($staffMembers as $staff) {
 
 $totalDepartments = count($departments);
 
-// Check whether a staff member was registered successfully
-$successMessage = "";
+// Display success messages
+$successMessages = [
+  "added" => "Staff member registered successfully.",
+  "updated" => "Staff details updated successfully.",
+  "deactivated" => "Staff account deactivated successfully.",
+  "reactivated" => "Staff account reactivated successfully."
+];
 
-if (isset($_GET["success"]) && $_GET["success"] === "added") {
-  $successMessage = "Staff member registered successfully.";
+$successMessage = "";
+$errorMessages = [
+  "employment_inactive" => "This staff member cannot be reactivated because their employment status is not active.",
+  "invalid_request" => "The staff status request was invalid. Please try again.",
+  "not_found" => "The selected staff member could not be found.",
+  "self_deactivation" => "You cannot deactivate your own administrator account.",
+  "update_failed" => "Unable to update the staff account status. Please try again."
+];
+$errorMessage = "";
+
+if (isset($_GET["success"]) && isset($successMessages[$_GET["success"]])) {
+  $successMessage = $successMessages[$_GET["success"]];
+}
+
+if (isset($_GET["error"]) && isset($errorMessages[$_GET["error"]])) {
+  $errorMessage = $errorMessages[$_GET["error"]];
 }
 
 ?>
@@ -87,7 +121,8 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
       <a class="brand" href="index.php"><img src="../img/starianlogo.png" alt=""><span class="brand-name">Starian <span>Hotel</span></span></a>
       <div class="admin-identity"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
       <nav class="side-nav" aria-label="Admin navigation">
-        <a href="index.php"><i class="fa-solid fa-house"></i>Dashboard</a><a href="rooms.php"><i class="fa-solid fa-bed"></i>Rooms</a><a href="menu-orders.php"><i class="fa-solid fa-utensils"></i>Menu / Orders</a><a href="bookings.php"><i class="fa-regular fa-calendar-check"></i>Bookings</a><a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a><a class="active" href="staff.php" aria-current="page"><i class="fa-solid fa-user-group"></i>Staff</a><a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a><a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
+        <a href="index.php"><i class="fa-solid fa-house"></i>Dashboard</a><a href="rooms.php"><i class="fa-solid fa-bed"></i>Rooms</a><a href="menu-orders.php"><i class="fa-solid fa-utensils"></i>Menu / Orders</a><a href="bookings.php"><i class="fa-regular fa-calendar-check"></i>Bookings</a><a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a><a class="active" href="staff.php" aria-current="page"><i class="fa-solid fa-user-group"></i>Staff</a>
+        <a href="former-staff.php"><i class="fa-solid fa-user-clock"></i>Former Staff</a><a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a><a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
       <p class="sidebar-motto">Better Service<span>Better Stays</span></p>
     </aside>
@@ -107,9 +142,25 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
           </a>
         </div>
         <?php if ($successMessage !== ""): ?>
-          <div class="alert alert-success">
-            <i class="fa-solid fa-circle-check"></i>
-            <?php echo htmlspecialchars($successMessage, ENT_QUOTES, "UTF-8"); ?>
+          <div class="room-form-alert success staff-toast" role="status" aria-live="polite">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span class="staff-toast-message">
+              <?php echo htmlspecialchars($successMessage, ENT_QUOTES, "UTF-8"); ?>
+            </span>
+            <button class="staff-toast-dismiss" type="button" aria-label="Dismiss notification">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+        <?php endif; ?>
+        <?php if ($errorMessage !== ""): ?>
+          <div class="room-form-alert staff-toast" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <span class="staff-toast-message">
+              <?php echo htmlspecialchars($errorMessage, ENT_QUOTES, "UTF-8"); ?>
+            </span>
+            <button class="staff-toast-dismiss" type="button" aria-label="Dismiss notification">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
           </div>
         <?php endif; ?>
 
@@ -169,6 +220,16 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
                   <option value="inactive">Inactive</option>
                 </select>
               </label>
+              <label class="select-control">
+                <select id="employmentStatusFilter" aria-label="Filter by employment status">
+                  <option value="">All Employment Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="resigned">Resigned</option>
+                  <option value="terminated">Terminated</option>
+                  <option value="retired">Retired</option>
+                </select>
+              </label>
             </div>
           </div>
           <div class="table-wrap">
@@ -183,6 +244,7 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Status</th>
+                  <th>Employment Status</th>
                   <th>Join Date</th>
                   <th>Actions</th>
                 </tr>
@@ -237,6 +299,30 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
 
                       <td>
                         <?php
+                        $employmentStatus = $staff["employment_status"] ?? "active";
+
+                        $employmentLabels = [
+                          "active" => "Active",
+                          "suspended" => "Suspended",
+                          "resigned" => "Resigned",
+                          "terminated" => "Terminated",
+                          "retired" => "Retired"
+                        ];
+                        ?>
+
+                        <span class="badge">
+                          <?php
+                          echo htmlspecialchars(
+                            $employmentLabels[$employmentStatus] ?? ucfirst($employmentStatus),
+                            ENT_QUOTES,
+                            "UTF-8"
+                          );
+                          ?>
+                        </span>
+                      </td>
+
+                      <td>
+                        <?php
                         echo !empty($staff["created_at"])
                           ? date("d M Y", strtotime($staff["created_at"]))
                           : "Not available";
@@ -287,7 +373,7 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
                 <?php else: ?>
 
                   <tr>
-                    <td colspan="10" style="text-align:center; padding:25px;">
+                    <td colspan="11" style="text-align:center; padding:25px;">
                       No staff members found.
                     </td>
                   </tr>
@@ -305,6 +391,7 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
       </main>
     </div>
   </div>
+
   <script src="javascript/staff.js?v=<?php echo filemtime(__DIR__ . '/javascript/staff.js'); ?>"></script>
 </body>
 

@@ -254,6 +254,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <a href="staff.php">
           <i class="fa-solid fa-user-group"></i>Staff
         </a>
+        <a href="former-staff.php"><i class="fa-solid fa-user-clock"></i>Former Staff</a>
 
         <a href="reports.php">
           <i class="fa-solid fa-chart-column"></i>Reports

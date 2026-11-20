@@ -37,10 +37,19 @@ $errorMessage = "";
 
 // Fetch existing staff details
 $stmt = $conn->prepare("
-    SELECT id, fullname, email, phone, role, status
-    FROM users
-    WHERE id = ? AND role != 'customer'
-    LIMIT 1
+   SELECT
+    id,
+    fullname,
+    email,
+    phone,
+    role,
+    status,
+    employment_status,
+    departure_date,
+    departure_reason
+FROM users
+WHERE id = ? AND role != 'customer'
+LIMIT 1
 ");
 
 $stmt->bind_param("i", $staffId);
@@ -74,6 +83,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $phone = trim($_POST["phone"] ?? "");
     $role = $_POST["role"] ?? "";
     $status = $_POST["status"] ?? "";
+    $employmentStatus = $_POST["employment_status"] ?? "active";
+    $departureDate = $_POST["departure_date"] ?? "";
+    $departureReason = trim($_POST["departure_reason"] ?? "");
+
+    $allowedEmploymentStatuses = [
+      "active",
+      "suspended",
+      "resigned",
+      "terminated",
+      "retired"
+    ];
 
     if (
       $fullname === "" ||
@@ -96,6 +116,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $errorMessage = "Please select a valid employee role.";
     } elseif (!in_array($status, ["active", "inactive"], true)) {
       $errorMessage = "Please select a valid account status.";
+    } elseif (!in_array($employmentStatus, $allowedEmploymentStatuses, true)) {
+      $errorMessage = "Please select a valid employment status.";
+    } elseif (
+      in_array($employmentStatus, ["resigned", "terminated", "retired"], true) &&
+      ($departureDate === "" || $departureReason === "")
+    ) {
+      $errorMessage = "Please provide the departure date and reason.";
+    } elseif (
+      $departureDate !== "" &&
+      !DateTime::createFromFormat("!Y-m-d", $departureDate)
+    ) {
+      $errorMessage = "Please enter a valid departure date.";
     } else {
 
       // Check whether another account uses this email
@@ -122,19 +154,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Update employee details
         $update = $conn->prepare("
                     UPDATE users
-                    SET fullname = ?, email = ?, phone = ?, role = ?, status = ?
+                    SET fullname = ?, email = ?, phone = ?, role = ?, status = ?, employment_status = ?, departure_date = ?, departure_reason = ?
                     WHERE id = ? AND role != 'customer'
                 ");
 
         if ($update) {
 
+          // Automatically disable accounts for suspended or former employees
+          $finalStatus = in_array(
+            $employmentStatus,
+            ["suspended", "resigned", "terminated", "retired"],
+            true
+          ) ? "inactive" : $status;
+
+          // Only retain departure details for former employees
+          $isFormerEmployee = in_array(
+            $employmentStatus,
+            ["resigned", "terminated", "retired"],
+            true
+          );
+
+          $finalDepartureDate = $isFormerEmployee ? $departureDate : null;
+          $finalDepartureReason = $isFormerEmployee ? $departureReason : null;
+
           $update->bind_param(
-            "sssssi",
+            "ssssssssi",
             $fullname,
             $email,
             $phone,
             $role,
-            $status,
+            $finalStatus,
+            $employmentStatus,
+            $finalDepartureDate,
+            $finalDepartureReason,
             $staffId
           );
 
@@ -162,6 +214,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $staff["phone"] = $phone;
     $staff["role"] = $role;
     $staff["status"] = $status;
+    $staff["employment_status"] = $employmentStatus;
+    $staff["departure_date"] = $departureDate;
+    $staff["departure_reason"] = $departureReason;
   }
 }
 ?>
@@ -203,6 +258,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <a href="bookings.php"><i class="fa-regular fa-calendar-check"></i>Bookings</a>
         <a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a>
         <a class="active" href="staff.php" aria-current="page"><i class="fa-solid fa-user-group"></i>Staff</a>
+        <a href="former-staff.php"><i class="fa-solid fa-user-clock"></i>Former Staff</a>
         <a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a>
         <a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>
@@ -327,6 +383,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   </option>
                 </select>
               </div>
+              <div class="form-group">
+                <label for="employment_status">Employment Status</label>
+
+                <select id="employment_status" name="employment_status" required>
+                  <?php
+                  $employmentOptions = [
+                    "active" => "Active",
+                    "suspended" => "Suspended",
+                    "resigned" => "Resigned",
+                    "terminated" => "Terminated",
+                    "retired" => "Retired"
+                  ];
+                  ?>
+
+                  <?php foreach ($employmentOptions as $value => $label): ?>
+                    <option value="<?php echo $value; ?>"
+                      <?php echo ($staff["employment_status"] ?? "active") === $value ? "selected" : ""; ?>>
+                      <?php echo $label; ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+
+              <div class="form-group" id="departureDateGroup">
+                <label for="departure_date">Departure Date</label>
+                <input type="date"
+                  id="departure_date"
+                  name="departure_date"
+                  value="<?php echo htmlspecialchars($staff["departure_date"] ?? "", ENT_QUOTES, "UTF-8"); ?>">
+              </div>
+
+              <div class="form-group" id="departureReasonGroup">
+                <label for="departure_reason">Reason for Leaving</label>
+                <textarea id="departure_reason"
+                  name="departure_reason"
+                  rows="4"><?php echo htmlspecialchars($staff["departure_reason"] ?? "", ENT_QUOTES, "UTF-8"); ?></textarea>
+              </div>
             </div>
 
             <div class="room-form-actions">
@@ -340,6 +433,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       </main>
     </div>
   </div>
+  <script src="javascript/editstaff.js?v=<?php echo filemtime(__DIR__ . '/javascript/editstaff.js'); ?>"></script>
 </body>
 
 </html>

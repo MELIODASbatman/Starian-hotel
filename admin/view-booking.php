@@ -92,6 +92,7 @@ $paymentBadgeClass = in_array($paymentStatus, ["pending", "unpaid"], true)
         <a class="active" href="bookings.php" aria-current="page"><i class="fa-regular fa-calendar-check"></i>Bookings</a>
         <a href="customers.php"><i class="fa-solid fa-users"></i>Customers</a>
         <a href="staff.php"><i class="fa-solid fa-user-group"></i>Staff</a>
+        <a href="former-staff.php"><i class="fa-solid fa-user-clock"></i>Former Staff</a>
         <a href="reports.php"><i class="fa-solid fa-chart-column"></i>Reports</a>
        <a href="contact-messages.php"><i class="fa-regular fa-envelope"></i>Contact Messages</a>
       </nav>

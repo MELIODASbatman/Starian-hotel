@@ -1,3 +1,4 @@
+
 <?php
 
 // Protect this page - only administrators can access it
@@ -8,26 +9,28 @@ require_once __DIR__ . "/../php/db.php";
 
 // Allow POST requests only
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-  header("Location: staff.php");
+  header("Location: staff.php?error=invalid_request");
   exit;
 }
 
 // Verify CSRF token
 if (
   !isset($_POST["csrf_token"]) ||
+  !isset($_SESSION["staff_status_csrf_token"]) ||
   !hash_equals(
     $_SESSION["staff_status_csrf_token"],
     $_POST["csrf_token"]
   )
 ) {
-  exit("Invalid request. Please refresh and try again.");
+  header("Location: staff.php?error=invalid_request");
+  exit;
 }
 
 // Validate staff ID
 $staffId = filter_input(INPUT_POST, "staff_id", FILTER_VALIDATE_INT);
 
 if (!$staffId || $staffId <= 0) {
-  header("Location: staff.php");
+  header("Location: staff.php?error=invalid_request");
   exit;
 }
 
@@ -35,7 +38,7 @@ if (!$staffId || $staffId <= 0) {
 $newStatus = $_POST["status"] ?? "";
 
 if (!in_array($newStatus, ["active", "inactive"], true)) {
-  header("Location: staff.php");
+  header("Location: staff.php?error=invalid_request");
   exit;
 }
 
@@ -48,7 +51,42 @@ if (
   exit;
 }
 
-// Update employee status
+// Retrieve the employee's current employment status
+$check = $conn->prepare("
+    SELECT employment_status
+    FROM users
+    WHERE id = ? AND role != 'customer'
+");
+
+if (!$check) {
+  error_log("Staff lookup failed: " . $conn->error);
+  header("Location: staff.php?error=update_failed");
+  exit;
+}
+
+$check->bind_param("i", $staffId);
+$check->execute();
+
+$result = $check->get_result();
+$staff = $result->fetch_assoc();
+
+$check->close();
+
+if (!$staff) {
+  header("Location: staff.php?error=not_found");
+  exit;
+}
+
+// Prevent suspended or former employees from being reactivated
+if (
+  $newStatus === "active" &&
+  $staff["employment_status"] !== "active"
+) {
+  header("Location: staff.php?error=employment_inactive");
+  exit;
+}
+
+// Update employee account status
 $stmt = $conn->prepare("
     UPDATE users
     SET status = ?
@@ -57,7 +95,8 @@ $stmt = $conn->prepare("
 
 if (!$stmt) {
   error_log("Staff status update preparation failed: " . $conn->error);
-  exit("Unable to process this request.");
+  header("Location: staff.php?error=update_failed");
+  exit;
 }
 
 $stmt->bind_param("si", $newStatus, $staffId);
