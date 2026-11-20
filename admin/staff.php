@@ -6,6 +6,11 @@ require_once __DIR__ . "/includes/auth.php";
 // Connect to the database
 require_once __DIR__ . "/../php/db.php";
 
+// Create CSRF token for staff status changes
+if (empty($_SESSION["staff_status_csrf_token"])) {
+  $_SESSION["staff_status_csrf_token"] = bin2hex(random_bytes(32));
+}
+
 // Fetch all employees, excluding customers
 $sql = $conn->query("
     SELECT
@@ -54,6 +59,13 @@ foreach ($staffMembers as $staff) {
 
 $totalDepartments = count($departments);
 
+// Check whether a staff member was registered successfully
+$successMessage = "";
+
+if (isset($_GET["success"]) && $_GET["success"] === "added") {
+  $successMessage = "Staff member registered successfully.";
+}
+
 ?>
 
 <!doctype html>
@@ -94,6 +106,12 @@ $totalDepartments = count($departments);
             <i class="fa-solid fa-plus"></i>Add New Staff
           </a>
         </div>
+        <?php if ($successMessage !== ""): ?>
+          <div class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            <?php echo htmlspecialchars($successMessage, ENT_QUOTES, "UTF-8"); ?>
+          </div>
+        <?php endif; ?>
 
         <section class="staff-summary">
           <article class="stat-card"><span class="stat-icon"><i class="fa-solid fa-users"></i></span>
@@ -227,26 +245,39 @@ $totalDepartments = count($departments);
 
                       <td>
                         <div class="actions">
-                          <button
-                            class="icon-button"
-                            type="button"
-                            aria-label="Edit <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
+                          <a class="icon-button"
+                            href="edit-staff.php?id=<?php echo (int) $staff['id']; ?>"
+                            aria-label="Edit staff details">
                             <i class="fa-solid fa-pen"></i>
-                          </button>
+                          </a>
 
-                          <button
-                            class="icon-button"
-                            type="button"
-                            aria-label="View <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
+                          <a class="icon-button"
+                            href="view-staff.php?id=<?php echo (int) $staff['id']; ?>"
+                            aria-label="View staff details">
                             <i class="fa-regular fa-eye"></i>
-                          </button>
+                          </a>
 
-                          <button
-                            class="icon-button danger-action"
-                            type="button"
-                            aria-label="Delete <?php echo htmlspecialchars($staff["fullname"], ENT_QUOTES, "UTF-8"); ?>">
-                            <i class="fa-regular fa-trash-can"></i>
-                          </button>
+                          <form method="POST"
+                            action="toggle-staff-status.php"
+                            onsubmit="return confirm('Are you sure you want to change this staff member’s account status?');">
+
+                            <input type="hidden" name="csrf_token"
+                              value="<?php echo htmlspecialchars($_SESSION["staff_status_csrf_token"], ENT_QUOTES, "UTF-8"); ?>">
+
+                            <input type="hidden" name="staff_id"
+                              value="<?php echo (int) $staff['id']; ?>">
+
+                            <input type="hidden" name="status"
+                              value="<?php echo $staff['status'] === 'active' ? 'inactive' : 'active'; ?>">
+
+                            <button class="icon-button danger-action" type="submit"
+                              aria-label="<?php echo $staff['status'] === 'active' ? 'Deactivate staff' : 'Reactivate staff'; ?>"
+                              title="<?php echo $staff['status'] === 'active' ? 'Deactivate' : 'Reactivate'; ?>">
+
+                              <i class="fa-solid <?php echo $staff['status'] === 'active' ? 'fa-user-slash' : 'fa-user-check'; ?>"></i>
+
+                            </button>
+                          </form>
                         </div>
                       </td>
                     </tr>

@@ -225,8 +225,10 @@ $stmt->close();
               </tbody>
             </table>
           </div>
-          <div class="table-footer"><span>Showing 1 to 5 of 36 customers</span>
-            <div class="pagination"><span><i class="fa-solid fa-chevron-left"></i></span><span class="current">1</span><span>2</span><span>3</span><span><i class="fa-solid fa-chevron-right"></i></span></div>
+          <div class="table-footer">
+            <span>
+              Showing <?php echo $customersResult->num_rows; ?> customers
+            </span>
           </div>
         </section>
       </main>
