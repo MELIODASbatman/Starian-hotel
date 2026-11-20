@@ -1,5 +1,66 @@
 <?php
+
+// Protect this page - only administrators can access it
 require_once __DIR__ . "/includes/auth.php";
+
+// Connect to the database
+require_once __DIR__ . "/../php/db.php";
+
+// Fetch total bookings
+$bookingQuery = $conn->query("
+    SELECT COUNT(*) AS total_bookings
+    FROM bookings
+");
+
+if (!$bookingQuery) {
+  error_log("Booking statistics error: " . $conn->error);
+  exit("Unable to load booking statistics.");
+}
+
+$bookingStats = $bookingQuery->fetch_assoc();
+
+$totalBookings = (int) $bookingStats["total_bookings"];
+
+// Fetch total food orders
+$orderQuery = $conn->query("
+    SELECT COUNT(*) AS total_orders
+    FROM food_orders
+");
+
+if (!$orderQuery) {
+  error_log("Food order statistics error: " . $conn->error);
+  exit("Unable to load food order statistics.");
+}
+
+$orderStats = $orderQuery->fetch_assoc();
+
+$totalOrders = (int) $orderStats["total_orders"];
+
+// Calculate revenue from paid room bookings and food orders
+$revenueQuery = $conn->query("
+    SELECT
+        (
+            SELECT COALESCE(SUM(total_price), 0)
+            FROM bookings
+            WHERE payment_status = 'paid'
+        )
+        +
+        (
+            SELECT COALESCE(SUM(total_amount), 0)
+            FROM food_orders
+            WHERE payment_status = 'paid'
+        ) AS total_revenue
+");
+
+if (!$revenueQuery) {
+  error_log("Revenue statistics error: " . $conn->error);
+  exit("Unable to load revenue statistics.");
+}
+
+$revenueStats = $revenueQuery->fetch_assoc();
+
+$totalRevenue = (float) $revenueStats["total_revenue"];
+
 ?>
 
 <!doctype html>
@@ -28,7 +89,8 @@ require_once __DIR__ . "/includes/auth.php";
     </aside>
     <div class="workspace">
       <header class="topbar"><label class="menu-toggle" for="admin-menu" aria-label="Toggle admin menu"><i class="fa-solid fa-bars"></i></label><span class="topbar-spacer"></span><?php require __DIR__ . "/includes/notification-widget.php"; ?>
-        <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div><form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
+        <div class="top-admin"><span class="admin-avatar"><i class="fa-solid fa-user-shield"></i></span><span><strong><?php echo htmlspecialchars($adminName, ENT_QUOTES, "UTF-8"); ?></strong><small>Administrator</small></span></div>
+        <form class="admin-logout-form" method="post" action="../logout.php"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION["profile_csrf_token"], ENT_QUOTES, "UTF-8"); ?>" /><button class="logout-link" type="submit"><i class="fa-solid fa-right-from-bracket"></i>Log out</button></form>
       </header>
       <main class="page-content">
         <div class="page-heading">
@@ -40,13 +102,25 @@ require_once __DIR__ . "/includes/auth.php";
         </div>
         <section class="report-stats" aria-label="Monthly summary">
           <article class="stat-card"><span class="stat-icon"><i class="fa-regular fa-calendar-check"></i></span>
-            <div><span class="stat-label">Total Bookings</span><strong class="stat-value">125</strong><span class="stat-foot">↗ 12% vs last month</span></div>
+            <div><span class="stat-label">Total Bookings</span>
+              <strong class="stat-value">
+                <?php echo number_format($totalBookings); ?>
+              </strong><span class="stat-foot">↗ 12% vs last month</span>
+            </div>
           </article>
           <article class="stat-card"><span class="stat-icon orange"><i class="fa-solid fa-utensils"></i></span>
-            <div><span class="stat-label">Total Orders</span><strong class="stat-value">96</strong><span class="stat-foot">↗ 8% vs last month</span></div>
+            <div><span class="stat-label">Total Orders</span>
+              <strong class="stat-value">
+                <?php echo number_format($totalOrders); ?>
+              </strong><span class="stat-foot">↗ 8% vs last month</span>
+            </div>
           </article>
           <article class="stat-card"><span class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></span>
-            <div><span class="stat-label">Revenue (KSh)</span><strong class="stat-value">245,600</strong><span class="stat-foot">↗ 15% vs last month</span></div>
+            <div><span class="stat-label">Revenue (KSh)</span>
+              <strong class="stat-value">
+                <?php echo number_format($totalRevenue, 2); ?>
+              </strong><span class="stat-foot">↗ 15% vs last month</span>
+            </div>
           </article>
           <article class="stat-card"><span class="stat-icon purple"><i class="fa-solid fa-bed"></i></span>
             <div><span class="stat-label">Room Occupancy</span><strong class="stat-value">83%</strong><span class="stat-foot">↗ 6% vs last month</span></div>

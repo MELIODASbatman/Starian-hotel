@@ -9,6 +9,8 @@
   const agreeTerms = document.getElementById("agree-terms");
   const payButton = document.getElementById("pay-button");
   const feedback = document.getElementById("checkout-feedback");
+  const csrfToken = payButton ? payButton.dataset.csrfToken : "";
+  const payButtonLabel = payButton ? payButton.textContent.trim() : "";
 
   if (
     paymentMethods.length !== 3 ||
@@ -16,7 +18,8 @@
     !countryCode ||
     !agreeTerms ||
     !payButton ||
-    !feedback
+    !feedback ||
+    !csrfToken
   ) {
     throw new Error("Food checkout page is missing required payment controls.");
   }
@@ -70,7 +73,7 @@
 
   agreeTerms.addEventListener("change", clearFeedback);
 
-  payButton.addEventListener("click", () => {
+  payButton.addEventListener("click", async () => {
     clearFeedback();
 
     if (!agreeTerms.checked) {
@@ -109,10 +112,37 @@
     }
 
     payButton.disabled = true;
-    payButton.textContent = "Opening confirmation...";
-    window.location.assign(
-      `food_confirmation.php?order_id=${encodeURIComponent(orderId)}`,
-    );
+    payButton.textContent = "Processing demo payment...";
+
+    try {
+      const response = await fetch("php/process_food_payment.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          phone: phone,
+          csrf_token: csrfToken,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Demo payment could not be completed.");
+      }
+
+      window.location.assign(
+        `food_confirmation.php?order_id=${encodeURIComponent(result.order_id)}`,
+      );
+    } catch (error) {
+      showFeedback(
+        error.message || "Demo payment could not be completed. Please try again.",
+        true,
+      );
+      payButton.disabled = false;
+      payButton.textContent = payButtonLabel;
+    }
   });
 
   setActiveFields();

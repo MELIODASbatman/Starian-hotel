@@ -15,6 +15,10 @@ require_once __DIR__ . "/php/db.php";
 
 $user_id = (int) $_SESSION["user_id"];
 
+if (empty($_SESSION["food_payment_csrf_token"])) {
+  $_SESSION["food_payment_csrf_token"] = bin2hex(random_bytes(32));
+}
+
 $order_id = filter_input(INPUT_GET, "order_id", FILTER_VALIDATE_INT);
 
 if (!$order_id || $order_id < 1) {
@@ -28,6 +32,8 @@ $statement = $conn->prepare(
       food_orders.created_at,
       food_orders.total_amount,
       food_orders.order_status,
+      food_orders.payment_method,
+      food_orders.payment_status,
       food_order_items.id AS item_id,
       food_order_items.quantity,
       food_order_items.price AS unit_price,
@@ -69,7 +75,9 @@ while ($row = $result->fetch_assoc()) {
       "id" => (int) $row["order_id"],
       "created_at" => $row["created_at"],
       "total_amount" => (float) $row["total_amount"],
-      "status" => strtolower((string) $row["order_status"])
+      "status" => strtolower((string) $row["order_status"]),
+      "payment_method" => (string) $row["payment_method"],
+      "payment_status" => strtolower((string) $row["payment_status"])
     ];
   }
 
@@ -97,6 +105,19 @@ if ($order === null) {
 if ($order["status"] === "cancelled") {
   http_response_code(409);
   exit("This food order has been cancelled and cannot be paid for.");
+}
+
+if ($order["payment_status"] === "paid" || $order["payment_method"] === "pay_at_hotel") {
+  header("Location: food_confirmation.php?order_id=" . (int) $order["id"]);
+  exit;
+}
+
+if (
+  $order["payment_method"] !== "mpesa" ||
+  $order["payment_status"] !== "pending"
+) {
+  http_response_code(409);
+  exit("This food order is not awaiting M-Pesa demo payment.");
 }
 
 if (count($items) === 0) {
@@ -291,8 +312,8 @@ function escapeHTML($value)
             <section
               class="payment-panel payment-panel-mpesa"
               aria-labelledby="mpesa-title">
-              <h4 id="mpesa-title">M-Pesa Payment</h4>
-              <p>Enter your M-Pesa phone number to continue.</p>
+              <h4 id="mpesa-title">M-Pesa Demo Payment</h4>
+              <p>Enter your Kenyan mobile number to simulate payment. No real money will be charged.</p>
               <div class="phone-input">
                 <label class="visually-hidden" for="country-code">Country code</label>
                 <select id="country-code" name="country_code">
@@ -313,7 +334,7 @@ function escapeHTML($value)
               class="payment-panel payment-panel-card"
               aria-labelledby="card-title">
               <h4 id="card-title">Card Payment</h4>
-              <p>Enter the details printed on your payment card.</p>
+              <p>Card payments are not connected in this demo. Select M-Pesa to continue.</p>
               <label class="payment-field" for="card-number">Card number</label>
               <input
                 class="payment-input"
@@ -366,16 +387,10 @@ function escapeHTML($value)
           class="pay-button"
           id="pay-button"
           type="button"
-          data-order-id="<?= (int) $order["id"] ?>">
-          Continue to Confirmation
+          data-order-id="<?= (int) $order["id"] ?>"
+          data-csrf-token="<?= escapeHTML($_SESSION["food_payment_csrf_token"]) ?>">
+          Pay KSh <?= $order_total_display ?> (Demo)
         </button>
-        <div class="confirmation-actions">
-          <a
-            class="confirmation-secondary-action"
-            href="food_confirmation.php?order_id=<?= (int) $order["id"] ?>">
-            View Order Confirmation
-          </a>
-        </div>
         <p
           class="checkout-feedback"
           id="checkout-feedback"
@@ -384,7 +399,7 @@ function escapeHTML($value)
           hidden></p>
         <p class="payment-security">
           <i class="fa-solid fa-lock" aria-hidden="true"></i>
-          This demo checkout does not process payments.
+          Demo M-Pesa only. No real money is transferred; your order remains pending until an administrator confirms it.
         </p>
 
         <div class="terms-agreement">

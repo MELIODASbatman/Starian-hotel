@@ -32,6 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
   $allowedStatuses = [
     "pending",
+    "confirmed",
     "preparing",
     "ready",
     "delivered"
@@ -43,6 +44,42 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     !in_array($newStatus, $allowedStatuses, true)
   ) {
     die("Invalid order information.");
+  }
+
+  if ($newStatus === "confirmed") {
+    $confirmationCheck = $conn->prepare("
+        SELECT order_status, payment_status, payment_method
+        FROM food_orders
+        WHERE id = ?
+        LIMIT 1
+    ");
+
+    if (!$confirmationCheck) {
+      error_log("Unable to prepare order confirmation check: " . $conn->error);
+      die("Unable to confirm this order right now.");
+    }
+
+    $confirmationCheck->bind_param("i", $postedOrderId);
+
+    if (!$confirmationCheck->execute()) {
+      error_log("Unable to check order before confirmation: " . $confirmationCheck->error);
+      $confirmationCheck->close();
+      die("Unable to confirm this order right now.");
+    }
+
+    $confirmationState = $confirmationCheck->get_result()->fetch_assoc();
+    $confirmationCheck->close();
+
+    if (!$confirmationState || $confirmationState["order_status"] !== "pending") {
+      die("Only pending orders can be confirmed.");
+    }
+
+    if (
+      $confirmationState["payment_status"] !== "paid" &&
+      $confirmationState["payment_method"] !== "pay_at_hotel"
+    ) {
+      die("Complete the M-Pesa demo payment before confirming this order.");
+    }
   }
 
   $updateStmt = $conn->prepare("
@@ -118,6 +155,9 @@ $orderStmt->close();
 if (!$order) {
   die("Food order not found.");
 }
+
+$canConfirmOrder = $order["payment_status"] === "paid" ||
+  $order["payment_method"] === "pay_at_hotel";
 
 // Fetch individual food items
 $itemsStmt = $conn->prepare("
@@ -450,6 +490,29 @@ $itemsResult = $itemsStmt->get_result();
               ); ?>
             </p>
 
+            <?php if ($order["order_status"] === "pending" && $canConfirmOrder): ?>
+              <form method="POST" action="view-food-order.php?id=<?php echo (int) $order["id"]; ?>">
+                <input type="hidden" name="order_id" value="<?php echo (int) $order["id"]; ?>">
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="<?php echo htmlspecialchars(
+                    $_SESSION["food_order_csrf_token"],
+                    ENT_QUOTES,
+                    "UTF-8"
+                  ); ?>">
+                <input type="hidden" name="order_status" value="confirmed">
+                <button type="submit" class="button-primary">
+                  <i class="fa-solid fa-circle-check"></i>
+                  Confirm Order
+                </button>
+              </form>
+            <?php elseif ($order["order_status"] === "pending"): ?>
+              <p class="room-form-alert">
+                Complete the M-Pesa demo payment before confirming this order.
+              </p>
+            <?php endif; ?>
+
             <form method="POST" action="view-food-order.php?id=<?php echo (int) $order["id"]; ?>">
 
               <input
@@ -474,6 +537,7 @@ $itemsResult = $itemsStmt->get_result();
                   <?php
                   $statuses = [
                     "pending" => "Pending",
+                    "confirmed" => "Confirmed",
                     "preparing" => "Preparing",
                     "ready" => "Ready",
                     "delivered" => "Delivered"
@@ -484,6 +548,7 @@ $itemsResult = $itemsStmt->get_result();
 
                     <option
                       value="<?php echo $value; ?>"
+                      <?php echo $value === "confirmed" && $order["order_status"] === "pending" && !$canConfirmOrder ? "disabled" : ""; ?>
                       <?php echo ($order["order_status"] === $value) ? "selected" : ""; ?>>
                       <?php echo $label; ?>
                     </option>

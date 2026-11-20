@@ -12,6 +12,7 @@ $paymentStatus = $_GET["payment_status"] ?? "";
 // Allowed filter values
 $allowedOrderStatuses = [
   "pending",
+  "confirmed",
   "preparing",
   "ready",
   "delivered"
@@ -252,6 +253,7 @@ $stmt->close();
               <select name="order_status" id="order_status">
                 <option value="">All Order Statuses</option>
                 <option value="pending" <?php echo $orderStatus === "pending" ? "selected" : ""; ?>>Pending</option>
+                <option value="confirmed" <?php echo $orderStatus === "confirmed" ? "selected" : ""; ?>>Confirmed</option>
                 <option value="preparing" <?php echo $orderStatus === "preparing" ? "selected" : ""; ?>>Preparing</option>
                 <option value="ready" <?php echo $orderStatus === "ready" ? "selected" : ""; ?>>Ready</option>
                 <option value="delivered" <?php echo $orderStatus === "delivered" ? "selected" : ""; ?>>Delivered</option>

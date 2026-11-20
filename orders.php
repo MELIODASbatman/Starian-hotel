@@ -79,7 +79,9 @@ $statusLabels = [
   "pending" => "Pending",
   "confirmed" => "Confirmed",
   "preparing" => "Preparing",
+  "ready" => "Ready",
   "completed" => "Delivered",
+  "delivered" => "Delivered",
   "cancelled" => "Cancelled"
 ];
 
@@ -87,7 +89,9 @@ $statusCategories = [
   "pending" => "preparing",
   "confirmed" => "preparing",
   "preparing" => "preparing",
+  "ready" => "preparing",
   "completed" => "delivered",
+  "delivered" => "delivered",
   "cancelled" => "cancelled"
 ];
 

@@ -33,6 +33,9 @@ $statement = $conn->prepare(
       food_orders.order_status,
       food_orders.payment_method,
       food_orders.payment_status,
+      food_orders.transaction_id,
+      food_orders.payment_reference,
+      food_orders.paid_at,
       food_order_items.id AS item_id,
       food_order_items.quantity,
       food_order_items.price AS unit_price,
@@ -76,7 +79,10 @@ while ($row = $result->fetch_assoc()) {
       "total_amount" => (float) $row["total_amount"],
       "status" => strtolower((string) $row["order_status"]),
       "payment_method" => (string) $row["payment_method"],
-      "payment_status" => strtolower((string) $row["payment_status"])
+      "payment_status" => strtolower((string) $row["payment_status"]),
+      "transaction_id" => $row["transaction_id"],
+      "payment_reference" => $row["payment_reference"],
+      "paid_at" => $row["paid_at"]
     ];
   }
 
@@ -106,6 +112,15 @@ if (count($items) === 0) {
   exit("This food order has no items.");
 }
 
+if (
+  in_array($order["payment_method"], ["mpesa", "M-Pesa (Demo)"], true) &&
+  $order["payment_status"] !== "paid" &&
+  $order["status"] !== "cancelled"
+) {
+  header("Location: foodcheckout.php?order_id=" . (int) $order["id"]);
+  exit;
+}
+
 $storedTotalCents = (int) round($order["total_amount"] * 100);
 if ($itemsSubtotalCents !== $storedTotalCents) {
   error_log("Food order total does not match its saved item subtotals.");
@@ -117,6 +132,8 @@ $statusLabels = [
   "pending" => "Pending confirmation",
   "confirmed" => "Confirmed",
   "preparing" => "Preparing",
+  "ready" => "Ready",
+  "delivered" => "Delivered",
   "completed" => "Completed",
   "cancelled" => "Cancelled"
 ];
@@ -134,6 +151,27 @@ $pageMessage = $isCancelled
 $orderDate = date("d M Y, g:i a", strtotime($order["created_at"]));
 $orderTotal = number_format($itemsSubtotalCents / 100, 2);
 $fullname = $_SESSION["fullname"] ?? "My Account";
+$isMpesaDemo = in_array(
+  $order["payment_method"],
+  ["mpesa", "M-Pesa (Demo)"],
+  true
+);
+$paymentMethodLabel = $isMpesaDemo
+  ? "M-Pesa (Demo)"
+  : ($order["payment_method"] === "pay_at_hotel"
+    ? "Pay at Hotel"
+    : ucwords(str_replace("_", " ", $order["payment_method"])));
+$paymentStatusLabel = $isMpesaDemo
+  ? ($order["payment_status"] === "paid"
+    ? "Paid (Demo)"
+    : ucfirst($order["payment_status"]))
+  : ($order["payment_method"] === "pay_at_hotel"
+    ? "Due at hotel"
+    : ucfirst($order["payment_status"]));
+$transactionReference = $order["payment_reference"] ?: $order["transaction_id"];
+$paidAt = !empty($order["paid_at"])
+  ? date("d M Y, g:i a", strtotime($order["paid_at"]))
+  : "Not recorded";
 
 function escapeHTML($value)
 {
@@ -306,21 +344,36 @@ function escapeHTML($value)
           </p>
           <p>
             <span>Payment status</span>
-            <strong><?= $order["payment_method"] === "pay_at_hotel"
-                      ? "Due at hotel"
-                      : escapeHTML(ucfirst($order["payment_status"])) ?></strong>
+            <strong><?= escapeHTML($paymentStatusLabel) ?></strong>
           </p>
           <p>
             <span>Payment method</span>
-            <strong><?= $order["payment_method"] === "pay_at_hotel"
-                      ? "Pay at Hotel"
-                      : escapeHTML(ucfirst($order["payment_method"])) ?></strong>
+            <strong><?= escapeHTML($paymentMethodLabel) ?></strong>
           </p>
+          <?php if ($isMpesaDemo): ?>
+            <p>
+              <span>Transaction reference</span>
+              <strong><?= escapeHTML($transactionReference ?: "Not available") ?></strong>
+            </p>
+            <p>
+              <span>Payment date</span>
+              <strong><?= escapeHTML($paidAt) ?></strong>
+            </p>
+          <?php endif; ?>
         </div>
 
         <p class="confirmation-demo-note">
           <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-          This confirmation records your food order only. No payment was taken.
+          <?php if ($order["payment_method"] === "pay_at_hotel"): ?>
+            Payment is due at the hotel.
+          <?php else: ?>
+            This M-Pesa payment is simulated; no real money was transferred.
+          <?php endif; ?>
+          <?php if ($isPending): ?>
+            Your order is awaiting administrator confirmation.
+          <?php elseif (!$isCancelled): ?>
+            Your order has been confirmed by hotel staff.
+          <?php endif; ?>
         </p>
 
         <div class="confirmation-actions">
