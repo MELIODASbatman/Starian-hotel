@@ -99,4 +99,4 @@ if ($notificationListResult) {
     </a>
   </div>
 </div>
-<script src="admin.js?v=<?php echo filemtime(__DIR__ . "/../admin.js"); ?>" defer></script>
+<script src="javascript/admin.js?v=<?php echo filemtime(__DIR__ . "/../javascript/admin.js"); ?>" defer></script>

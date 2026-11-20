@@ -111,8 +111,8 @@ if ($sql) {
   <meta name="description" content="Manage Starian Hotel rooms">
   <title>Manage Rooms | Starian Hotel Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
-  <script src="../javascript/admin-search.js?v=20261118-room-filter" defer></script>
+  <link rel="stylesheet" href="css/admin.css?v=<?php echo filemtime(__DIR__ . "/css/admin.css"); ?>">
+  <script src="javascript/admin-search.js?v=20261118-room-filter" defer></script>
 </head>
 
 <body>

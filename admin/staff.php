@@ -77,7 +77,7 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
   <meta name="description" content="Manage Starian Hotel staff members">
   <title>Staff Management | Starian Hotel Admin</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="admin.css?v=<?php echo filemtime(__DIR__ . "/admin.css"); ?>">
+  <link rel="stylesheet" href="css/admin.css?v=<?php echo filemtime(__DIR__ . "/css/admin.css"); ?>">
 </head>
 
 <body>
@@ -305,7 +305,7 @@ if (isset($_GET["success"]) && $_GET["success"] === "added") {
       </main>
     </div>
   </div>
-  <script src="staff.js?v=<?php echo filemtime(__DIR__ . '/staff.js'); ?>"></script>
+  <script src="javascript/staff.js?v=<?php echo filemtime(__DIR__ . '/javascript/staff.js'); ?>"></script>
 </body>
 
 </html>

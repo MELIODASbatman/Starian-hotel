@@ -60,7 +60,7 @@ a {
       rgba(5, 48, 79, 0.98) 68%,
       rgba(5, 48, 79, 0.35) 100%
     ),
-    url("../img/Starian Hotel at Golden Dusk.png") center bottom / auto 39%
+    url("../../img/Starian Hotel at Golden Dusk.png") center bottom / auto 39%
       no-repeat,
     var(--navy-deep);
   color: #fff;
