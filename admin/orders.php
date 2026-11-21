@@ -4,10 +4,16 @@ require_once __DIR__ . "/../php/db.php";
 
 $adminName = $_SESSION["fullname"] ?? "Administrator";
 
+// Generate a CSRF token for delivery status updates
+if (empty($_SESSION["delivery_status_csrf_token"])) {
+  $_SESSION["delivery_status_csrf_token"] = bin2hex(random_bytes(32));
+}
+
 // Search and filter values
 $search = trim($_GET["search"] ?? "");
 $orderStatus = $_GET["order_status"] ?? "";
 $paymentStatus = $_GET["payment_status"] ?? "";
+$deliveryStatus = $_GET["delivery_status"] ?? "";
 
 // Allowed filter values
 $allowedOrderStatuses = [
@@ -25,6 +31,13 @@ $allowedPaymentStatuses = [
   "failed"
 ];
 
+$allowedDeliveryStatuses = [
+  "pending",
+  "preparing",
+  "ready",
+  "delivered"
+];
+
 // Validate filter values
 if (!in_array($orderStatus, $allowedOrderStatuses, true)) {
   $orderStatus = "";
@@ -34,6 +47,9 @@ if (!in_array($paymentStatus, $allowedPaymentStatuses, true)) {
   $paymentStatus = "";
 }
 
+if (!in_array($deliveryStatus, $allowedDeliveryStatuses, true)) {
+  $deliveryStatus = "";
+}
 // Build the orders query
 $sql = "
     SELECT
@@ -43,6 +59,7 @@ $sql = "
         fo.order_status,
         fo.payment_status,
         fo.payment_method,
+        fo.delivery_status,
         fo.created_at,
         u.fullname,
         COALESCE(SUM(foi.quantity), 0) AS total_items
@@ -79,10 +96,17 @@ if ($paymentStatus !== "") {
   $types .= "s";
 }
 
+// Filter by delivery status
+if ($deliveryStatus !== "") {
+  $sql .= " AND fo.delivery_status = ?";
+  $params[] = $deliveryStatus;
+  $types .= "s";
+}
+
 $sql .= "
     GROUP BY
         fo.id, fo.user_id, fo.total_amount, fo.order_status,
-        fo.payment_status, fo.payment_method, fo.created_at, u.fullname
+        fo.payment_status, fo.payment_method, fo.delivery_status, fo.created_at, u.fullname
     ORDER BY fo.created_at DESC, fo.id DESC
 ";
 
@@ -226,6 +250,25 @@ $stmt->close();
             <p>View and manage customer food orders.</p>
           </div>
         </div>
+        <?php if (isset($_GET["delivery_update"])): ?>
+
+          <?php if ($_GET["delivery_update"] === "success"): ?>
+            <div class="alert alert-success">
+              Delivery status updated successfully.
+            </div>
+
+          <?php elseif ($_GET["delivery_update"] === "invalid"): ?>
+            <div class="alert alert-error">
+              Invalid request. Please try again.
+            </div>
+
+          <?php else: ?>
+            <div class="alert alert-error">
+              Unable to update delivery status. Please try again.
+            </div>
+          <?php endif; ?>
+
+        <?php endif; ?>
 
         <section class="panel">
 
@@ -270,6 +313,29 @@ $stmt->close();
                 <option value="failed" <?php echo $paymentStatus === "failed" ? "selected" : ""; ?>>Failed</option>
               </select>
             </div>
+            <div class="room-form-field">
+              <label for="delivery_status">Delivery Status</label>
+
+              <select name="delivery_status" id="delivery_status">
+                <option value="">All Delivery Statuses</option>
+
+                <option value="pending" <?php echo $deliveryStatus === "pending" ? "selected" : ""; ?>>
+                  Pending
+                </option>
+
+                <option value="preparing" <?php echo $deliveryStatus === "preparing" ? "selected" : ""; ?>>
+                  Preparing
+                </option>
+
+                <option value="ready" <?php echo $deliveryStatus === "ready" ? "selected" : ""; ?>>
+                  Ready
+                </option>
+
+                <option value="delivered" <?php echo $deliveryStatus === "delivered" ? "selected" : ""; ?>>
+                  Delivered
+                </option>
+              </select>
+            </div>
 
             <button type="submit" class="button-primary">
               <i class="fa-solid fa-filter"></i> Apply Filters
@@ -293,6 +359,7 @@ $stmt->close();
                   <th>Payment Method</th>
                   <th>Payment Status</th>
                   <th>Order Status</th>
+                  <th>Delivery Status</th>
                   <th>Date</th>
                   <th>Action</th>
                 </tr>
@@ -354,6 +421,55 @@ $stmt->close();
                       </td>
 
                       <td>
+                        <form method="POST" action="update-delivery-status.php" class="delivery-status-form">
+
+                          <input
+                            type="hidden"
+                            name="order_id"
+                            value="<?php echo (int) $order["id"]; ?>">
+
+                          <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?php echo htmlspecialchars($_SESSION["delivery_status_csrf_token"], ENT_QUOTES, "UTF-8"); ?>">
+
+                          <select
+                            name="delivery_status"
+                            aria-label="Delivery status"
+                            class="delivery-status-select delivery-select-<?php echo htmlspecialchars($currentDeliveryStatus, ENT_QUOTES, "UTF-8"); ?>">
+                            <?php
+                            $currentDeliveryStatus = $order["delivery_status"] ?? "pending";
+
+                            $deliveryOptions = [
+                              "pending" => "Pending",
+                              "preparing" => "Preparing",
+                              "ready" => "Ready",
+                              "delivered" => "Delivered"
+                            ];
+
+                            foreach ($deliveryOptions as $value => $label):
+                            ?>
+                              <option
+                                value="<?php echo $value; ?>"
+                                <?php echo ($currentDeliveryStatus === $value) ? "selected" : ""; ?>>
+                                <?php echo $label; ?>
+                              </option>
+                            <?php endforeach; ?>
+                          </select>
+
+                          <span class="delivery-status-badge delivery-<?php echo htmlspecialchars($currentDeliveryStatus, ENT_QUOTES, "UTF-8"); ?>">
+                            <?php echo htmlspecialchars(ucfirst($currentDeliveryStatus), ENT_QUOTES, "UTF-8"); ?>
+                          </span>
+
+                          <button type="submit" class="delivery-update-button">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            Update
+                          </button>
+
+                        </form>
+                      </td>
+
+                      <td>
                         <?php echo htmlspecialchars(
                           $order["created_at"] ?? "",
                           ENT_QUOTES,
@@ -378,7 +494,7 @@ $stmt->close();
                 <?php else: ?>
 
                   <tr>
-                    <td colspan="9">
+                    <td colspan="10">
                       No food orders have been placed yet.
                     </td>
                   </tr>

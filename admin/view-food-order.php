@@ -32,10 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
   $allowedStatuses = [
     "pending",
-    "confirmed",
-    "preparing",
-    "ready",
-    "delivered"
+    "confirmed"
   ];
 
   if (
@@ -133,6 +130,7 @@ $orderStmt = $conn->prepare("
         fo.payment_status,
         fo.payment_method,
         fo.transaction_id,
+        fo.delivery_status,
         fo.payment_reference,
         fo.paid_at,
         fo.created_at,
@@ -319,6 +317,12 @@ $itemsResult = $itemsStmt->get_result();
           </p>
         <?php endif; ?>
 
+        <?php if (($_GET["delivery_update"] ?? "") === "success"): ?>
+          <p class="form-message success">
+            Delivery status updated successfully!
+          </p>
+        <?php endif; ?>
+
         <section class="panel">
 
           <div class="panel-heading">
@@ -350,6 +354,81 @@ $itemsResult = $itemsStmt->get_result();
           </div>
 
         </section>
+
+        <section class="panel">
+
+          <div class="panel-heading">
+            <h2>Delivery Status</h2>
+          </div>
+
+          <div class="panel-body">
+
+            <?php
+            $deliveryStatus = $order["delivery_status"] ?? "pending";
+            ?>
+
+            <p>
+              <strong>Current Delivery Status:</strong>
+
+              <span class="delivery-status-badge delivery-<?php echo htmlspecialchars($deliveryStatus, ENT_QUOTES, "UTF-8"); ?>">
+                <?php echo htmlspecialchars(ucfirst($deliveryStatus), ENT_QUOTES, "UTF-8"); ?>
+              </span>
+            </p>
+
+            <form method="POST" action="update-delivery-status.php" class="status-update-form">
+
+              <input
+                type="hidden"
+                name="order_id"
+                value="<?php echo (int) $order["id"]; ?>">
+
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="<?php echo htmlspecialchars($_SESSION["delivery_status_csrf_token"], ENT_QUOTES, "UTF-8"); ?>">
+
+              <div class="room-form-field">
+                <label for="delivery_status">Update Delivery Status</label>
+
+                <select
+                  id="delivery_status"
+                  name="delivery_status"
+                  class="status-select delivery-status-select delivery-select-<?php echo htmlspecialchars($deliveryStatus, ENT_QUOTES, "UTF-8"); ?>"
+                  required>
+
+                  <?php
+                  $deliveryOptions = [
+                    "pending" => "Pending",
+                    "preparing" => "Preparing",
+                    "ready" => "Ready",
+                    "delivered" => "Delivered"
+                  ];
+
+                  foreach ($deliveryOptions as $value => $label):
+                  ?>
+
+                    <option
+                      value="<?php echo $value; ?>"
+                      <?php echo ($deliveryStatus === $value) ? "selected" : ""; ?>>
+                      <?php echo $label; ?>
+                    </option>
+
+                  <?php endforeach; ?>
+
+                </select>
+              </div>
+
+              <button type="submit" class="button-primary">
+                <i class="fa-solid fa-truck"></i>
+                Update Delivery Status
+              </button>
+
+            </form>
+
+          </div>
+
+        </section>
+
 
         <section class="panel">
 
@@ -497,10 +576,10 @@ $itemsResult = $itemsStmt->get_result();
                   type="hidden"
                   name="csrf_token"
                   value="<?php echo htmlspecialchars(
-                    $_SESSION["food_order_csrf_token"],
-                    ENT_QUOTES,
-                    "UTF-8"
-                  ); ?>">
+                            $_SESSION["food_order_csrf_token"],
+                            ENT_QUOTES,
+                            "UTF-8"
+                          ); ?>">
                 <input type="hidden" name="order_status" value="confirmed">
                 <button type="submit" class="button-primary">
                   <i class="fa-solid fa-circle-check"></i>
@@ -513,7 +592,10 @@ $itemsResult = $itemsStmt->get_result();
               </p>
             <?php endif; ?>
 
-            <form method="POST" action="view-food-order.php?id=<?php echo (int) $order["id"]; ?>">
+            <form
+              method="POST"
+              action="view-food-order.php?id=<?php echo (int) $order["id"]; ?>"
+              class="status-update-form">
 
               <input
                 type="hidden"
@@ -532,15 +614,16 @@ $itemsResult = $itemsStmt->get_result();
               <div class="room-form-field">
                 <label for="order_status">Update Order Status</label>
 
-                <select id="order_status" name="order_status" required>
+                <select
+                  id="order_status"
+                  name="order_status"
+                  class="status-select order-status-select order-status-<?php echo htmlspecialchars($order["order_status"] ?? "pending", ENT_QUOTES, "UTF-8"); ?>"
+                  required>
 
                   <?php
                   $statuses = [
                     "pending" => "Pending",
-                    "confirmed" => "Confirmed",
-                    "preparing" => "Preparing",
-                    "ready" => "Ready",
-                    "delivered" => "Delivered"
+                    "confirmed" => "Confirmed"
                   ];
 
                   foreach ($statuses as $value => $label):

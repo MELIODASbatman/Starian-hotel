@@ -37,6 +37,45 @@ $sql = $conn->query("
 
 $totalRevenue = $sql->fetch_assoc()["revenue"];
 
+// 5. Room occupancy
+$sql = $conn->query("
+    SELECT COUNT(DISTINCT room_id) AS occupied_rooms
+    FROM bookings
+    WHERE check_in <= CURDATE()
+    AND check_out > CURDATE()
+    AND payment_status = 'paid'
+    AND booking_status != 'cancelled'
+");
+
+$occupiedRooms = (int) $sql->fetch_assoc()["occupied_rooms"];
+
+// 6. Total rooms
+$sql = $conn->query("
+    SELECT COUNT(*) AS total
+    FROM rooms
+");
+
+$totalRooms = (int) $sql->fetch_assoc()["total"];
+
+// Calculate occupancy percentage
+$occupancyRate = ($totalRooms > 0)
+  ? round(($occupiedRooms / $totalRooms) * 100)
+  : 0;
+
+// 7. Count delivered food orders
+$sql = $conn->query("
+    SELECT COUNT(*) AS delivered
+    FROM food_orders
+    WHERE delivery_status = 'delivered'
+");
+
+$deliveredOrders = (int) $sql->fetch_assoc()["delivered"];
+
+// Calculate food order completion percentage
+$foodCompletionRate = ($totalOrders > 0)
+  ? round(($deliveredOrders / $totalOrders) * 100)
+  : 0;
+
 // 5. Get the five most recent bookings
 $sql = $conn->query("
     SELECT
@@ -184,25 +223,39 @@ if ($sql) {
                 </div>
                 <div class="performance-grid">
                   <div class="performance-item">
-                    <div class="progress-ring"><span>65%</span></div>
+                    <div class="progress-ring">
+                      <span><?php echo $occupancyRate; ?>%</span>
+                    </div>
+
                     <div class="performance-copy">
                       <strong>Room Occupancy</strong>
+
                       <div class="progress-track">
-                        <span style="width: 65%"></span>
+                        <span style="width: <?php echo $occupancyRate; ?>%"></span>
                       </div>
-                      <small>12 of 25 rooms</small>
+
+                      <small>
+                        <?php echo $occupiedRooms; ?> of
+                        <?php echo $totalRooms; ?> rooms
+                      </small>
                     </div>
                   </div>
                   <div class="performance-item">
                     <div class="progress-ring green-ring">
-                      <span>85%</span>
+                      <span><?php echo $foodCompletionRate; ?>%</span>
                     </div>
+
                     <div class="performance-copy">
                       <strong>Food Orders Completion</strong>
+
                       <div class="progress-track green-track">
-                        <span style="width: 85%"></span>
+                        <span style="width: <?php echo $foodCompletionRate; ?>%"></span>
                       </div>
-                      <small>18 of 22 orders</small>
+
+                      <small>
+                        <?php echo $deliveredOrders; ?> of
+                        <?php echo $totalOrders; ?> orders delivered
+                      </small>
                     </div>
                   </div>
                 </div>
